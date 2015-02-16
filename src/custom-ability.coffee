@@ -2,12 +2,16 @@
 
 isArray         = require('util-ex/lib/is/type/array')
 isFunction      = require('util-ex/lib/is/type/function')
+isBoolean       = require('util-ex/lib/is/type/boolean')
 extend          = require('util-ex/lib/_extend')
 extendFilter    = require('util-ex/lib/extend')
 injectMethods   = require('util-ex/lib/injectMethods')
 defineProperty  = require('util-ex/lib/defineProperty')
 
 module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
+  if isBoolean aCoreMethod
+    isGetClassFunc = aCoreMethod
+    aCoreMethod = undefined
   abilityFn = (aClass, aOptions)->
     AbilityClass = abilityClass
     AbilityClass = abilityClass(aClass, aOptions) if isGetClassFunc is true
