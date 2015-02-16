@@ -25,6 +25,23 @@ describe 'customAbility', ->
     for k,v of MyAbility::
       v.reset()
     return
+  it 'could have no coreMethod', ->
+    testable1 = customAbility MyAbility
+    class Root
+    class My
+      inherits My, Root
+    result = testable1 Root
+    result.should.be.equal Root
+    for k, v of MyAbility
+      v.should.be.equal result[k]
+    for k, v of MyAbility::
+      v.should.be.equal result::[k]
+    result = testable1 My
+    result.should.be.equal My
+    for k of MyAbility
+      should.not.exist result[k], k
+    for k of MyAbility::
+      result::should.not.have.ownProperty k
   it 'should add methods and class methods to a class', ->
     My = ->
     testable(My).should.be.equal My

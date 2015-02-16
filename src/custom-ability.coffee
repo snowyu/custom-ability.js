@@ -1,20 +1,21 @@
-"use strict"
+'use strict'
 
-isArray         = require("util-ex/lib/is/type/array")
-isFunction      = require("util-ex/lib/is/type/function")
-extend          = require("util-ex/lib/_extend")
-extendFilter    = require("util-ex/lib/extend")
-injectMethods   = require("util-ex/lib/injectMethods")
+isArray         = require('util-ex/lib/is/type/array')
+isFunction      = require('util-ex/lib/is/type/function')
+extend          = require('util-ex/lib/_extend')
+extendFilter    = require('util-ex/lib/extend')
+injectMethods   = require('util-ex/lib/injectMethods')
+defineProperty  = require('util-ex/lib/defineProperty')
 
 module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
-  return (aClass, aOptions)->
+  abilityFn = (aClass, aOptions)->
     AbilityClass = abilityClass
     AbilityClass = abilityClass(aClass, aOptions) if isGetClassFunc is true
     throw new TypeError('no abilityClass') unless AbilityClass
 
     if not aClass?
       aClass = AbilityClass
-    else if not (aClass::[aCoreMethod])
+    else if not (aClass::$abilities and aClass::$abilities.self)
       # check whether additinal ability is exists.
       if not (aOptions and aOptions.inited) and (vName = AbilityClass.name) and
         aClass::$abilities and (vAbility = aClass::$abilities[vName.toLowerCase()])
@@ -23,6 +24,10 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           else
             aOptions = inited: true
           return vAbility aClass, aOptions
+      if not aClass::$abilities
+        defineProperty aClass::, '$abilities', self:abilityFn
+      else
+        aClass::$abilities.self = abilityFn
       if not aOptions? or not (aOptions.include or aOptions.exclude)
         extend aClass, AbilityClass
         extend aClass::, AbilityClass::
@@ -32,7 +37,11 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           vIncludes = [vIncludes] if not isArray vIncludes
         else
           vIncludes = []
-        vIncludes.push aCoreMethod if aOptions.includeAlways isnt false
+        if aCoreMethod
+          if isArray aCoreMethod
+            vIncludes = vIncludes.concat aCoreMethod
+          else
+            vIncludes.push aCoreMethod
         vExcludes = aOptions.exclude
         if vExcludes
           vExcludes = [vExcludes] if not isArray vExcludes
@@ -62,3 +71,4 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
         injectMethods(aClass::, aOptions.methods) if aOptions.methods instanceof Object
         injectMethods(aClass, aOptions.classMethods) if aOptions.classMethods instanceof Object
     aClass
+  return abilityFn
