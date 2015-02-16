@@ -32,6 +32,20 @@ describe 'customAbility', ->
       v.should.be.equal My[k]
     for k, v of MyAbility::
       v.should.be.equal My::[k]
+  it 'should use getClass function to make ability ', ->
+    fn = (aClass, aOptions)->
+      MyAbility.class = aClass
+      MyAbility
+    testable1 = customAbility fn, 'emit', true
+    My = ->
+    testable1(My).should.be.equal My
+    for k, v of MyAbility
+      v.should.be.equal My[k]
+    for k, v of MyAbility::
+      v.should.be.equal My::[k]
+    should.exist MyAbility.class
+    MyAbility.class.should.be.equal My
+    delete MyAbility.class
   it 'should only include methods', ->
 
     My = ->

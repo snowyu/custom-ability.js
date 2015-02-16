@@ -5,8 +5,9 @@ extend          = require("util-ex/lib/_extend")
 extendFilter    = require("util-ex/lib/extend")
 injectMethods   = require("util-ex/lib/injectMethods")
 
-module.exports = (AbilityClass, aCoreMethod)->
+module.exports = (AbilityClass, aCoreMethod, isGetClassFunc)->
   return (aClass, aOptions)->
+    AbilityClass = AbilityClass(aClass, aOptions) if isGetClassFunc is true
     if not aClass?
       aClass = AbilityClass
     else if not (aClass::[aCoreMethod])
