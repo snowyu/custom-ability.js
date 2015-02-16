@@ -1,0 +1,69 @@
+{
+  "name": "custom-ability",
+  "version": "1.0.0",
+  "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
+  "homepage": "https://github.com/snowyu/custom-ability.js",
+  "main": "./index",
+  "files": [
+    "README.md",
+    "LICENSE-MIT",
+    "*.js",
+    "test",
+    "src",
+    "lib"
+  ],
+  "scripts": {
+    "test": "grunt test"
+  },
+  "dependencies": {
+    "inherits-ex": "~1.0.6",
+    "util-ex": "~0.2.8"
+  },
+  "devDependencies": {
+    "chai": "~2.0.0",
+    "connect-livereload": "*",
+    "grunt": "*",
+    "grunt-contrib-clean": "*",
+    "grunt-contrib-coffee": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-mocha-test": "~0.12.7",
+    "grunt-newer": "*",
+    "grunt-release": "*",
+    "grunt-saucelabs": "*",
+    "mocha": "~2.1.0",
+    "pre-commit": "~1.0.4",
+    "sinon": "~1.12.2",
+    "sinon-chai": "~2.7.0",
+    "source-map-support": "*"
+  },
+  "pre-commit": [
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snowyu/custom-ability.js"
+  },
+  "keywords": [
+    "ability",
+    "object",
+    "class",
+    "model",
+    "prototype",
+    "state",
+    "stateful",
+    "event",
+    "reference",
+    "addref",
+    "refcount"
+  ],
+  "author": {
+    "name": "Riceball LEE",
+    "email": "snowyu.lee@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snowyu/custom-ability.js/issues"
+  }
+}
