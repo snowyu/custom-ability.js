@@ -90,6 +90,8 @@ the ability power with it.
 ],
 ```
 
+do not forget to add the `"ability.js"` file on your package root folder too.
+
 now user use this ability like this:
 
 ```coffee
