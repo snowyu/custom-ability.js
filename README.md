@@ -12,13 +12,15 @@ just one function:
 var customAbility = require('custom-ability')
 ```
 
-* customAbility(AbilityClass, coreMethod)
+* customAbility(AbilityClass, coreMethod[, isGetClassFunction])
 
 __arguments__
 
-* AbilityClass *(function)*: make the class become to ability.
+* AbilityClass *(function)*: the class will become to ability able.
 * coreMethod *(string)*: the core instance method name to identify this ability.
   * it's the key to avoid duplication injection.
+* isGetClassFunction *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
+  to return the real `Ability Class` if true. defaults to false.
 
 __return__
 
