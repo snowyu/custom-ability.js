@@ -46,6 +46,25 @@ describe 'customAbility', ->
     should.exist MyAbility.class
     MyAbility.class.should.be.equal My
     delete MyAbility.class
+  it 'should get proper aClass in getClass function to make ability ', ->
+    MyA = undefined
+    fn = (aClass, aOptions)->
+      MyA = class MyAbility1
+        emit: sinon.spy()
+        one: sinon.spy ->
+          should.exist aClass, 'aClass'
+          aClass.should.have.property 'count', 1
+        @count: 1
+    testable1 = customAbility fn, 'emit', true
+    My = ->
+    testable1(My).should.be.equal My
+    for k, v of MyA
+      v.should.be.equal My[k]
+    for k, v of MyA::
+      v.should.be.equal My::[k]
+    my = new My
+    my.one()
+    my.one.should.be.calledOnce
   it 'should only include methods', ->
 
     My = ->
