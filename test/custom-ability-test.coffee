@@ -42,6 +42,40 @@ describe 'customAbility', ->
       should.not.exist result[k], k
     for k of MyAbility::
       result::should.not.have.ownProperty k
+  it 'should add multi abilities on same class', ->
+    class OtherAbility
+      ding:->
+      @sth:->
+    testable1 = customAbility MyAbility
+    testable2 = customAbility OtherAbility
+    class Root
+    class My
+      inherits My, Root
+    result = testable1 Root
+    result.should.be.equal Root
+    for k, v of MyAbility
+      v.should.be.equal result[k]
+    for k, v of MyAbility::
+      v.should.be.equal result::[k]
+    result = testable1 My
+    result.should.be.equal My
+    for k of MyAbility
+      should.not.exist result[k], k
+    for k of MyAbility::
+      result::should.not.have.ownProperty k
+
+    result = testable2 Root
+    result.should.be.equal Root
+    for k, v of OtherAbility
+      v.should.be.equal result[k]
+    for k, v of OtherAbility::
+      v.should.be.equal result::[k]
+    result = testable2 My
+    result.should.be.equal My
+    for k of OtherAbility
+      should.not.exist result[k], k
+    for k of OtherAbility::
+      result::should.not.have.ownProperty k
   it 'should add methods and class methods to a class', ->
     My = ->
     testable(My).should.be.equal My

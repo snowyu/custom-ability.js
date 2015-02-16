@@ -16,22 +16,24 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
     AbilityClass = abilityClass
     AbilityClass = abilityClass(aClass, aOptions) if isGetClassFunc is true
     throw new TypeError('no abilityClass') unless AbilityClass
+    vName = AbilityClass.name # '$'vName means already injected.
+    vCoreMethod = if isArray(aCoreMethod) then aCoreMethod[0] else aCoreMethod
 
     if not aClass?
       aClass = AbilityClass
-    else if not (aClass::$abilities and aClass::$abilities.self)
+    else if not ((vCoreMethod and aClass::[vCoreMethod]) or
+    (vName and aClass::$abilities and aClass::$abilities['$'+vName]))
       # check whether additinal ability is exists.
-      if not (aOptions and aOptions.inited) and (vName = AbilityClass.name) and
+      if not (aOptions and aOptions.inited) and vName and
         aClass::$abilities and (vAbility = aClass::$abilities[vName.toLowerCase()])
           if aOptions
             aOptions.inited = true
           else
             aOptions = inited: true
           return vAbility aClass, aOptions
-      if not aClass::$abilities
-        defineProperty aClass::, '$abilities', self:abilityFn
-      else
-        aClass::$abilities.self = abilityFn
+      if vName
+        defineProperty aClass::, '$abilities', {} unless aClass::$abilities
+        aClass::$abilities['$'+vName] = abilityFn
       if not aOptions? or not (aOptions.include or aOptions.exclude)
         extend aClass, AbilityClass
         extend aClass::, AbilityClass::
