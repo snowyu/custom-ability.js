@@ -113,3 +113,51 @@ my.free() # print the 'destroy' here.
 ```
 
 More complicated example, you can see the [events-ex/src/eventable.coffee](https://github.com/snowyu/events-ex.js).
+
+
+## additional $abilities
+
+In order to make certain ability to work, you need to modify some methods
+of the class. this time we need the "additional abilities" now. eg, the
+event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
+We need to send a notification event when the state of the object changes.
+So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
+should be:
+
+```coffee
+eventable         = require 'events-ex/eventable'
+
+module.exports = (aClass)->
+  eventable aClass, methods:
+    # override methods:
+    setObjectState: (value, emitted = true)->
+      self= @self
+      @super.call(self, value)
+      self.emit value, self if emitted
+      return
+# more detail on [AbstractObject/src/eventable](https://github.com/snowyu/abstract-object)
+```
+
+the original `eventable('events-ex/eventable')` is no useful for AbstractObject.
+
+but we wanna the original `eventable('events-ex/eventable')` knows the changes
+and use it automatically.
+
+```coffee
+eventable         = require 'events-ex/eventable'
+
+class MyClass
+  inherits MyClass, AbstractObject
+  eventable MyClass
+```
+
+you just do this on the AbstractObject:
+
+```coffee
+AbstractObject = require('./lib/abstract-object')
+
+AbstractObject.$abilities =
+  eventable: require('./eventable')
+
+module.exports = AbstractObject
+```

@@ -205,3 +205,11 @@ describe 'customAbility', ->
     assert.equal oldExec, 1, 'should execute the original func once'
     assert.equal newExec, 1, 'should execute the new func once'
     return
+  it 'should use additional abilities', ->
+    class My
+      $abilities:
+        myability: testable
+    opt = {}
+    testable My, opt
+    opt.should.have.property 'inited', true
+    return
