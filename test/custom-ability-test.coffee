@@ -259,7 +259,7 @@ describe 'customAbility', ->
   it 'should use additional abilities', ->
     class My
       $abilities:
-        myability: testable
+        MyAbility: testable
     opt = {}
     testable My, opt
     opt.should.have.property 'inited', true

@@ -3,6 +3,10 @@
 generate the ability which can be added to any class directly.
 It makes custom ability more easy.
 
+Sometimes, we still feel that the class is a liitle big, and  too many features in it.
+We just need some of the features inside. So as a class developer can
+consider these functions to extract, as a kind of ability to the user.
+
 
 # API
 
@@ -38,6 +42,56 @@ the custom ability function has two arguments: `function(class[, options])`
       * use `this.super()` to call the original method.
       * `this.self` is the original `this` object.
   * `classMethods` *(object)*: hooked class methods to the class
+
+# Specification
+
+## V1.2.x
+
+* Put the 'ability.js' file in your NPM Package folder which means this can be
+  as ability. So you can use this way to get the ability:
+
+```coffee
+ability  = require('custom-ability/require')
+
+class MyClass
+  #get the stateable ability from AbstractObject for MyClass
+  ability 'abstract-object', MyClass
+```
+
+* Put the '$abilities'*(object)* property on your prototype of class if need to modify
+  the class before apply ability.
+  * the `$abilities` object key is the AbilityClass Name
+  * the value is the modified ability function
+
+```coffee
+AbstractObject = require('./lib/abstract-object')
+
+AbstractObject.$abilities = {
+  # "Eventable" is the AbilityClass name
+  # the value is modified ability function.
+  Eventable: require('./eventable')
+}
+
+module.exports = AbstractObject
+```
+
+the AbstractObject's 'eventable' function:
+
+```coffee
+eventable         = require 'events-ex/eventable'
+
+module.exports = (aClass)->
+  eventable aClass, methods:
+    # override methods:
+    # we need to emit event when object state changes.
+    setObjectState: (value, emitted = true)->
+      self= @self
+      @super.call(self, value)
+      self.emit value, self if emitted
+      return
+    ...
+# more detail on [AbstractObject/src/eventable](https://github.com/snowyu/abstract-object)
+```
 
 
 ## Usage
@@ -156,7 +210,8 @@ you just do this on the AbstractObject:
 AbstractObject = require('./lib/abstract-object')
 
 AbstractObject.$abilities =
-  eventable: require('./eventable')
+  # "Eventable" is the AbilityClass name
+  Eventable: require('./eventable')
 
 module.exports = AbstractObject
 ```

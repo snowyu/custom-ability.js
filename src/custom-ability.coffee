@@ -25,7 +25,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
     (vName and aClass::$abilities and aClass::$abilities['$'+vName]))
       # check whether additinal ability is exists.
       if not (aOptions and aOptions.inited) and vName and
-        aClass::$abilities and (vAbility = aClass::$abilities[vName.toLowerCase()])
+        aClass::$abilities and (vAbility = aClass::$abilities[vName])
           if aOptions
             aOptions.inited = true
           else
