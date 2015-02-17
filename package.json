@@ -1,6 +1,6 @@
 {
   "name": "custom-ability",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
   "homepage": "https://github.com/snowyu/custom-ability.js",
   "main": "./index",
