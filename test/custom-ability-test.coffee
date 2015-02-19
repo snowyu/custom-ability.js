@@ -30,6 +30,19 @@ describe 'customAbility', ->
       v.should.be.equal result[k]
     for k, v of MyAbility::
       v.should.be.equal result::[k]
+  it 'could use getAbilityClass', ->
+    class My
+    getAbilityClass = (aClass)->MyAbility
+    testable1 = customAbility getAbilityClass, true
+    result = testable1 My
+    result.should.be.equal My
+    myAbilityCheck result
+
+  it 'could get AbilityClass when no aClass passing', ->
+    testable1 = customAbility MyAbility
+    My = testable1()
+    My.should.be.equal MyAbility
+
   it 'could have no coreMethod', ->
     testable1 = customAbility MyAbility
     class Root
