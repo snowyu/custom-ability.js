@@ -25,6 +25,11 @@ describe 'customAbility', ->
     for k,v of MyAbility::
       v.reset()
     return
+  myAbilityCheck = (result)->
+    for k, v of MyAbility
+      v.should.be.equal result[k]
+    for k, v of MyAbility::
+      v.should.be.equal result::[k]
   it 'could have no coreMethod', ->
     testable1 = customAbility MyAbility
     class Root
@@ -32,10 +37,7 @@ describe 'customAbility', ->
       inherits My, Root
     result = testable1 Root
     result.should.be.equal Root
-    for k, v of MyAbility
-      v.should.be.equal result[k]
-    for k, v of MyAbility::
-      v.should.be.equal result::[k]
+    myAbilityCheck result
     result = testable1 My
     result.should.be.equal My
     for k of MyAbility
@@ -257,10 +259,45 @@ describe 'customAbility', ->
     assert.equal newExec, 1, 'should execute the new func once'
     return
   it 'should use additional abilities', ->
+    testableOpts = ->
+      methods:
+        addtional: ->
     class My
       $abilities:
-        MyAbility: testable
+        MyAbility: testableOpts
     opt = {}
     testable My, opt
-    opt.should.have.property 'inited', true
+    My::should.have.ownProperty 'addtional'
+    myAbilityCheck My
+    return
+  it 'should use inherited additional abilities', ->
+    overRoot = sinon.spy()
+    overMy = sinon.spy -> @super.apply @self, arguments
+    rootOpts = ->
+      methods:
+        root: ->
+        over: overRoot
+    myOpts = ->
+      methods:
+        addtional: ->
+        over: overMy
+    class Root
+      $abilities:
+        MyAbility: rootOpts
+    class My
+      inherits My, Root
+      $abilities:
+        MyAbility: myOpts
+    opt = {}
+    testable My, opt
+    My::should.have.ownProperty 'addtional'
+    My::should.have.ownProperty 'root'
+    My::should.have.ownProperty 'over'
+    myAbilityCheck My
+    my = new My
+    my.over 1,2,3
+    overMy.should.have.been.calledOnce
+    overMy.should.have.been.calledWith 1,2,3
+    overRoot.should.have.been.calledOnce
+    overRoot.should.have.been.calledWith 1,2,3
     return

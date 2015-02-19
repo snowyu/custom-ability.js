@@ -38,14 +38,69 @@ the custom ability function has two arguments: `function(class[, options])`
     * note: the `coreMethod` could not be excluded. It's always added to the class.
   * `methods `*(object)*: hooked methods to the class
     * key: the method name to hook.
-    * value: the new method function
+    * value: the new method function, if original method is exists or not in replacedMethods:
       * use `this.super()` to call the original method.
       * `this.self` is the original `this` object.
   * `classMethods` *(object)*: hooked class methods to the class
+  * `replacedMethods` *(array)*: the method name in the array will be replaced the original
+    method directly.
 
 # Specification
 
-## V1.2.x
+## V1.3.x
+
++ add the replaceMethods option to custom ability function.
+* **<broken change>**: additional abilities usage changed
+  * separate ability options object.
+
+* Put the '$abilities'*(object)* property on your prototype of class if need to modify
+  the class before apply ability.
+  * the `$abilities` object key is the AbilityClass Name
+  * the value is the function to return the **ability options object**.
+
+```coffee
+AbstractObject = require('./lib/abstract-object')
+
+AbstractObject.$abilities = {
+  # "Eventable" is the AbilityClass name
+  # the value is modified ability function.
+  Eventable: require('./lib/eventable-options')
+}
+
+module.exports = AbstractObject
+```
+
+the [eventable-options.coffee](https://github.com/snowyu/abstract-object/blob/master/src/eventable-options.coffee) file:
+
+```coffee
+# eventable-options.coffee
+module.exports = (aOptions)->
+  aOptions = {} unless aOptions
+  aOptions.methods = {} unless aOptions.methods
+  extend aOptions.methods,
+    # override methods:
+    setObjectState: (value, emitted = true)->
+      self= @self
+      @super.call(self, value)
+      self.emit value, self if emitted
+      return
+  ...
+  return aOptions
+  # more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
+```
+
+the AbstractObject's 'eventable' function:
+
+  ```coffee
+  eventable         = require 'events-ex/eventable'
+  eventableOptions  = require './eventable-options'
+
+  module.exports = (aClass, aOptions)->
+    eventable aClass, eventableOptions(aOptions)
+  ```
+
+
+## V1.2.x *(deprecated)*
 
 * Put the 'ability.js' file in your NPM Package folder which means this can be
   as ability. So you can use this way to get the ability:
@@ -179,16 +234,27 @@ should be:
 
 ```coffee
 eventable         = require 'events-ex/eventable'
+eventableOptions  = require './eventable-options'
 
-module.exports = (aClass)->
-  eventable aClass, methods:
+module.exports = (aClass, aOptions)->
+  eventable aClass, eventableOptions(aOptions)
+```
+
+```coffee
+# eventable-options.coffee
+module.exports = (aOptions)->
+  aOptions = {} unless aOptions
+  aOptions.methods = {} unless aOptions.methods
+  extend aOptions.methods,
     # override methods:
     setObjectState: (value, emitted = true)->
       self= @self
       @super.call(self, value)
       self.emit value, self if emitted
       return
-# more detail on [AbstractObject/src/eventable](https://github.com/snowyu/abstract-object)
+  ...
+  return aOptions
+  # more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
 ```
 
 the original `eventable('events-ex/eventable')` is no useful for AbstractObject.
@@ -211,7 +277,7 @@ AbstractObject = require('./lib/abstract-object')
 
 AbstractObject.$abilities =
   # "Eventable" is the AbilityClass name
-  Eventable: require('./eventable')
+  Eventable: require('./lib/eventable-options')
 
 module.exports = AbstractObject
 ```
