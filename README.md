@@ -4,7 +4,7 @@ generate the ability which can be added to any class directly.
 It makes custom ability more easy.
 
 Sometimes, we still feel that the class is a liitle big, and  too many features in it.
-We just need some of the features inside. So as a class developer can
+We just need some of the features(methods) inside. So as a class developer can
 consider these functions to extract, as a kind of ability to the user.
 
 
