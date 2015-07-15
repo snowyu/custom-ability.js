@@ -189,7 +189,7 @@ the custom ability function has two arguments: `function(class[, options])`
 ## V1.3.3
 
 + use the injectMethods(AOP) for the methods of non-enumerable and beginning with '$' in an ability
-  to call `super` method.
+  to call `super` method. you can exclude it with normal name if it's not a core method.
 
 ```coffee
 customAbility = require 'custom-ability'
