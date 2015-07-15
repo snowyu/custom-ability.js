@@ -15,9 +15,9 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
   nonEnumNames = getNonEnumNames aObject
   result = []
   nonEnumNames.forEach (k)->
-    if !filter or filter(k)
-      if k[0] is '$' and isFunction(v = aObject[k])
-        k = k.substr(1) # get rid of the first char '$'
+    if k[0] is '$' and isFunction(v = aObject[k])
+      k = k.substr(1) # get rid of the first char '$'
+      if !filter or filter(k)
         if isFunction aTargetClass[k]
           injectMethod aTargetClass, k, v
         else if aTargetClass[k]?

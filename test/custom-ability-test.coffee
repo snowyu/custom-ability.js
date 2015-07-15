@@ -367,3 +367,16 @@ describe 'customAbility', ->
       
       t = OneAbility::$init.thisValues[0]
       t.should.be.equal a
+    it 'should ignore some injectMethod', ->
+      oldInit = sinon.spy()
+      class A
+        constructor: ->
+          @hi = 123
+          @init.apply @, arguments
+        init: oldInit
+        oneTestable A, exclude: 'init'
+      a = new A 123
+      OneAbility::$init.should.not.be.called
+      oldInit.should.be.calledOnce
+      oldInit.should.be.calledWith 123
+      
