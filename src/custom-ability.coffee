@@ -6,7 +6,28 @@ isBoolean       = require('util-ex/lib/is/type/boolean')
 extend          = require('util-ex/lib/_extend')
 extendFilter    = require('util-ex/lib/extend')
 injectMethods   = require('util-ex/lib/injectMethods')
+injectMethod    = require('util-ex/lib/injectMethod')
 defineProperty  = require('util-ex/lib/defineProperty')
+getNonEnumNames = require('util-ex/lib/get-non-enumerable-names')
+
+
+injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
+  nonEnumNames = getNonEnumNames aObject
+  result = []
+  nonEnumNames.forEach (k)->
+    if !filter or filter(k)
+      if k[0] is '$' and isFunction(v = aObject[k])
+        k = k.substr(1) # get rid of the first char '$'
+        if isFunction aTargetClass[k]
+          injectMethod aTargetClass, k, v
+        else if aTargetClass[k]?
+          throw new TypeError('the same non-null name is not function:'+k)
+        else
+          aTargetClass[k] = v
+        delete aObject[k]
+        result.push k
+    return
+  result
 
 module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
   if isBoolean aCoreMethod
@@ -28,8 +49,10 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           defineProperty aClass::, '$abilities', $abilities={} unless $abilities
           $abilities['$'+vName] = abilityFn
         if not aOptions? or not (aOptions.include or aOptions.exclude)
-          extend aClass, AbilityClass
-          extend aClass::, AbilityClass::
+          vExcludes = injectMethodsFromNonEnum aClass, AbilityClass
+          extendFilter aClass, AbilityClass, (k)-> not (k in vExcludes)
+          vExcludes = injectMethodsFromNonEnum aClass::, AbilityClass::
+          extend aClass::, AbilityClass::, (k)-> not (k in vExcludes)
         else
           vIncludes = aOptions.include
           if vIncludes
@@ -47,6 +70,10 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           else
             vExcludes = []
           vFilter = (k)-> filter k, vIncludes, vExcludes
+          vAbilities = injectMethodsFromNonEnum aClass, AbilityClass, vFilter
+          vAbilities = vAbilities.concat injectMethodsFromNonEnum aClass::, AbilityClass::, vFilter
+          vExcludes = vExcludes.concat vAbilities
+          vAbilities = undefined
           filterMethods = (methods)->
             if methods instanceof Object
               for k of methods

@@ -7,6 +7,7 @@ chai.use(sinonChai)
 
 customAbility   = require '../src/custom-ability'
 inherits        = require 'inherits-ex/lib/inherits'
+defineProperty  = require 'util-ex/lib/defineProperty'
 setImmediate    = setImmediate || process.nextTick
 
 describe 'customAbility', ->
@@ -314,3 +315,55 @@ describe 'customAbility', ->
     overRoot.should.have.been.calledOnce
     overRoot.should.have.been.calledWith 1,2,3
     return
+
+  describe 'use the injectMethods(AOP) to hook', ->
+    class OneAbility
+      defineProperty OneAbility::, '$init', sinon.spy ->
+        if @super
+          @super.apply @self, arguments
+
+      one: sinon.spy()
+      two: sinon.spy()
+      three: sinon.spy()
+      emit: sinon.spy()
+      @cone: sinon.spy()
+      @ctwo: sinon.spy()
+    oneTestable = customAbility OneAbility, 'emit'
+    beforeEach ->
+      OneAbility::$init.reset()
+      for k,v of OneAbility
+        v.reset()
+      for k,v of OneAbility::
+        v.reset()
+      return
+
+    it 'should injectMethod correctly', ->
+      oldInit = sinon.spy()
+      class A
+        constructor: ->
+          @hi = 123
+          @init.apply @, arguments
+        init: oldInit
+        oneTestable A
+      a = new A 123
+      OneAbility::$init.should.be.calledOnce
+      OneAbility::$init.should.be.calledWith 123
+      
+      t = OneAbility::$init.thisValues[0]
+      t.should.have.property 'self', a
+      oldInit.should.be.calledOnce
+      oldInit.should.be.calledWith 123
+
+    it 'should injectMethod non-exist correctly', ->
+      oldInit = sinon.spy()
+      class A
+        constructor: ->
+          @hi = 123
+          @init.apply @, arguments
+        oneTestable A
+      a = new A 123
+      OneAbility::$init.should.be.calledOnce
+      OneAbility::$init.should.be.calledWith 123
+      
+      t = OneAbility::$init.thisValues[0]
+      t.should.be.equal a
