@@ -213,6 +213,67 @@ class PropertyManagerAbility
 module.exports = customAbility PropertyManagerAbility, 'assign'
 ```
 
+## V1.4.x
+
+* Inject additional ability to each parent classes When the some parent classes has additional ability,
+  and mark it has been injected. note: the additional ability does not include the ability itself.
+* The methods of ability itself will be injected to the `farthest` parent class if possible. The static
+  methods of it will be inject to the current class, and mark it has been injected too.
+* Known Issues:
+  * the `middle` parent classes has no the static methods of ability.
+
+```coffee
+
+customAbility = require 'custom-ability'
+
+class Test
+  one: ->
+  @one: ->
+
+testable = customAbility Test #convert the class to testable ability
+
+class Root
+  $abilities:
+    Test: -> # additinal ability to Test
+      methods:
+        additional:->
+        two: ->
+class Mid
+  inherits Mid, Root
+  $abilities:
+    Test: -> # additinal ability to Test
+      methods:
+        additional:-> Mid.__super__.additional.apply(@, arguments)
+        three: ->
+class A
+  inherits A, Mid
+  testable A # make the class A testable.
+
+# A should have all static methods of Test
+# Mid,Root should have no any methods of Test
+for k, v of Test
+  Mid.should.not.have.ownProperty k
+  Root.should.not.have.ownProperty k
+  A.should.have.ownProperty k
+  v.should.be.equal A[k]
+
+
+# A and Mid should have no any methods of Test
+# the Root should have all methods of Test
+for k, v of Test::
+  A::should.not.have.ownProperty k
+  Mid::should.not.have.ownProperty k
+  Root::should.have.ownProperty k
+
+# Root should have additional methods:
+Root::should.have.ownProperty 'additional'
+Root::should.have.ownProperty 'two'
+
+Mid::should.have.ownProperty 'additional'
+Mid::should.have.ownProperty 'three'
+
+```
+
 ## V1.3.x
 
 + add the replaceMethods option to custom ability function.
@@ -223,6 +284,8 @@ module.exports = customAbility PropertyManagerAbility, 'assign'
   the class before apply ability.
   * the `$abilities` object key is the AbilityClass Name
   * the value is the function to return the **ability options object**.
+
+The AbstractObject need to hook some methods to make the eventable ability work correctly.
 
 ```coffee
 AbstractObject = require('./lib/abstract-object')
