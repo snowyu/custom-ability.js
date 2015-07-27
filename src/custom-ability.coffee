@@ -10,6 +10,8 @@ injectMethod    = require('util-ex/lib/injectMethod')
 defineProperty  = require('util-ex/lib/defineProperty')
 getNonEnumNames = require('util-ex/lib/get-non-enumerable-names')
 
+hasAbilityOnParent  = require('./has-ability-on-parent')
+
 
 injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
   nonEnumNames = getNonEnumNames aObject
@@ -128,13 +130,6 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
       result = not (k in aExcludes)
     else
       result = true
-    result
-  hasAbilityOnParent = (aClass, aName) ->
-    result = false
-    while !result and aClass and aClass::
-      if aClass::hasOwnProperty('$abilities') and aClass::$abilities.hasOwnProperty '$'+aName
-        result = true
-      aClass = aClass.super_
     result
   getAdditionalAbility = (aClass, aName) ->
     result = []
