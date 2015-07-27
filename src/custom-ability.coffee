@@ -39,20 +39,31 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
     throw new TypeError('no abilityClass') unless AbilityClass
     vName = AbilityClass.name # '$'vName means already injected.
     if aClass?
-      vhasCoreMethod = aClass::[(if isArray(aCoreMethod) then aCoreMethod[0] else aCoreMethod)]
-      $abilities = aClass::$abilities if vName and aClass::$abilities
-      vHasAddtionalAbility = vName and $abilities and $abilities[vName]
+      aClassPrototype = aClass::
+      vhasCoreMethod = if isArray(aCoreMethod) then aCoreMethod[0] else aCoreMethod
+      vhasCoreMethod = aClass::hasOwnProperty(vhasCoreMethod)
+      if vName
+        #vHasAddtionalAbility = hasAdditionalAbility aClass, vName
+        # how to judge whether injected??
+        $abilities = aClass::$abilities
+        vParentHasAbility = hasAbilityOnParent aClass, vName
+        $abilities = null unless aClass::hasOwnProperty '$abilities'
       # inject the ability:
       if not (vhasCoreMethod or ($abilities and $abilities['$'+vName]))
-        if vName
-          # flag this ability is already injected on the aClass.
-          defineProperty aClass::, '$abilities', $abilities={} unless $abilities
-          $abilities['$'+vName] = abilityFn
+        # if vName
+        #   # flag this ability is already injected on the aClass.
+        #   defineProperty aClass::, '$abilities', $abilities={} unless $abilities
+        #   $abilities['$'+vName] = abilityFn
         if not aOptions? or not (aOptions.include or aOptions.exclude)
+          if vName
+            vAddtionalAbilityInjected = injectAdditionalAbility aClass, vName, filterMethods
           vExcludes = injectMethodsFromNonEnum aClass, AbilityClass
           extendFilter aClass, AbilityClass, (k)-> not (k in vExcludes)
-          vExcludes = injectMethodsFromNonEnum aClass::, AbilityClass::
-          extend aClass::, AbilityClass::, (k)-> not (k in vExcludes)
+          if vAddtionalAbilityInjected
+            aClassPrototype = vAddtionalAbilityInjected::
+          if !vParentHasAbility
+            vExcludes = injectMethodsFromNonEnum aClassPrototype, AbilityClass::
+            extend aClassPrototype, AbilityClass::, (k)-> not (k in vExcludes)
         else
           vIncludes = aOptions.include
           if vIncludes
@@ -80,39 +91,29 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
                 delete methods[k] unless vFilter(k)
             return
           # check whether additinal ability is exists.
-          if vHasAddtionalAbility
-            vAbilities = getAdditionalAbility aClass, vName
-            i = vAbilities.length
-            while --i >= 0
-              vOptions = vAbilities[i]()
-              if vOptions?
-                filterMethods vOptions.methods
-                filterMethods vOptions.classMethods
-                if vOptions.methods instanceof Object
-                  injectMethods(aClass::, vOptions.methods, vOptions)
-                if vOptions.classMethods instanceof Object
-                  injectMethods(aClass, vOptions.classMethods, vOptions)
+          if vName
+            vAddtionalAbilityInjected = injectAdditionalAbility aClass, vName, filterMethods
 
           extendFilter aClass, AbilityClass, vFilter
-          extendFilter aClass::, AbilityClass::, vFilter
+          if vAddtionalAbilityInjected
+            aClassPrototype = vAddtionalAbilityInjected::
+          if !vParentHasAbility
+            extendFilter aClassPrototype, AbilityClass::, vFilter
           filterMethods aOptions.methods
           filterMethods aOptions.classMethods
-        # check whether additinal ability is exists.
-        if vHasAddtionalAbility and not vAbilities
-          vAbilities = getAdditionalAbility aClass, vName
-          i = vAbilities.length
-          while --i >= 0
-            vOptions = vAbilities[i]()
-            if vOptions?
-              if vOptions.methods instanceof Object
-                injectMethods(aClass::, vOptions.methods, vOptions)
-              if vOptions.classMethods instanceof Object
-                injectMethods(aClass, vOptions.classMethods, vOptions)
         if aOptions?
-          if aOptions.methods instanceof Object
-            injectMethods(aClass::, aOptions.methods, aOptions)
+          if !vParentHasAbility and aOptions.methods instanceof Object
+            injectMethods(aClassPrototype, aOptions.methods, aOptions)
           if aOptions.classMethods instanceof Object
             injectMethods(aClass, aOptions.classMethods, aOptions)
+        if vName #and !vHasAddtionalAbility
+          # flag this ability is already injected on the aClass.
+          if aClassPrototype != aClass::
+            aClassPrototype = aClass:: #restore the class prototype.
+          unless aClassPrototype.hasOwnProperty '$abilities'
+            $abilities = {}
+            defineProperty aClassPrototype, '$abilities', $abilities
+          $abilities['$'+vName] = abilityFn
       #END inject the ability
     else
       aClass = AbilityClass
@@ -128,11 +129,37 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
     else
       result = true
     result
+  hasAbilityOnParent = (aClass, aName) ->
+    result = false
+    while !result and aClass and aClass::
+      if aClass::hasOwnProperty('$abilities') and aClass::$abilities.hasOwnProperty '$'+aName
+        result = true
+      aClass = aClass.super_
+    result
   getAdditionalAbility = (aClass, aName) ->
     result = []
     while aClass and aClass::
-      if aClass::hasOwnProperty '$abilities'
-        result.push vAbility if vAbility = aClass::$abilities[aName]
+      if aClass::hasOwnProperty('$abilities') and
+          !aClass::$abilities['$'+aName] and aClass::$abilities[aName]
+        result.push aClass
+      aClass = aClass.super_
+    result
+  injectAdditionalAbility = (aClass, aName, filterMethods) ->
+    while aClass and aClass::
+      if aClass::hasOwnProperty('$abilities')
+        $abilities = aClass::$abilities
+        if !$abilities['$'+aName] and (vAbility = $abilities[aName])
+          vOptions = vAbility()
+          $abilities['$'+aName] = abilityFn
+          result = aClass
+          if vOptions?
+            if filterMethods
+              filterMethods vOptions.methods
+              filterMethods vOptions.classMethods
+            if vOptions.methods instanceof Object
+              injectMethods(aClass::, vOptions.methods, vOptions)
+            if vOptions.classMethods instanceof Object
+              injectMethods(aClass, vOptions.classMethods, vOptions)
       aClass = aClass.super_
     result
   return abilityFn

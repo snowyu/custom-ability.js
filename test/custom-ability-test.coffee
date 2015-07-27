@@ -55,7 +55,7 @@ describe 'customAbility', ->
     result = testable1 My
     result.should.be.equal My
     for k of MyAbility
-      should.not.exist result[k], k
+      should.exist result[k], k
     for k of MyAbility::
       result::should.not.have.ownProperty k
   it 'should add multi abilities on same class', ->
@@ -76,7 +76,7 @@ describe 'customAbility', ->
     result = testable1 My
     result.should.be.equal My
     for k of MyAbility
-      should.not.exist result[k], k
+      should.exist result[k], k
     for k of MyAbility::
       result::should.not.have.ownProperty k
 
@@ -89,9 +89,10 @@ describe 'customAbility', ->
     result = testable2 My
     result.should.be.equal My
     for k of OtherAbility
-      should.not.exist result[k], k
+      should.exist result[k], k
     for k of OtherAbility::
       result::should.not.have.ownProperty k
+
   it 'should add methods and class methods to a class', ->
     My = ->
     testable(My).should.be.equal My
@@ -286,7 +287,7 @@ describe 'customAbility', ->
     return
   it 'should use inherited additional abilities', ->
     overRoot = sinon.spy()
-    overMy = sinon.spy -> @super.apply @self, arguments
+    overMy = sinon.spy -> My.__super__.over.apply(@, arguments)
     rootOpts = ->
       methods:
         root: ->
@@ -305,7 +306,7 @@ describe 'customAbility', ->
     opt = {}
     testable My, opt
     My::should.have.ownProperty 'addtional'
-    My::should.have.ownProperty 'root'
+    My::should.have.property 'root'
     My::should.have.ownProperty 'over'
     myAbilityCheck My
     my = new My
@@ -315,6 +316,70 @@ describe 'customAbility', ->
     overRoot.should.have.been.calledOnce
     overRoot.should.have.been.calledWith 1,2,3
     return
+  it 'should use additional ability via multi classes', ->
+    overRoot = sinon.spy()
+    rootOpts = ->
+      methods:
+        root: ->
+        over: overRoot
+    class Root
+      $abilities:
+        MyAbility: rootOpts
+    class My
+      inherits My, Root
+    class My1
+      inherits My1, Root
+    opt = {}
+    testable My, opt
+    My::should.have.property 'root'
+    My::should.have.property 'over'
+    myAbilityCheck My
+    testable My1
+    My1::should.have.property 'root'
+    My1::should.have.property 'over'
+    myAbilityCheck My1
+    return
+  it 'should use additional ability via multi inherited classes', ->
+    class Root
+      $abilities:
+        MyAbility: -> # additinal ability to MyAbility
+          methods:
+            additional:->
+            two: ->
+    class Mid
+      inherits Mid, Root
+      $abilities:
+        MyAbility: -> # additinal ability to MyAbility
+          methods:
+            additional:-> Mid.__super__.additional.apply(@, arguments)
+            iok: ->
+    class A
+      inherits A, Mid
+      testable A # make the class A testable.
+
+    myAbilityCheck A
+
+    # A should have all static methods of Test
+    # Mid,Root should have no any methods of Test
+    for k, v of MyAbility
+      Mid.should.not.have.ownProperty k
+      Root.should.not.have.ownProperty k
+      A.should.have.ownProperty k
+      v.should.be.equal A[k]
+
+    # A and Mid should have no any methods of Test
+    # the Root should have all methods of Test
+    for k, v of MyAbility::
+      A::should.not.have.ownProperty k
+      Mid::should.not.have.ownProperty k
+      Root::should.have.ownProperty k
+
+    # Root should have additional methods:
+    Root::should.have.ownProperty 'additional'
+    Root::should.have.ownProperty 'two'
+
+    Mid::should.have.ownProperty 'additional'
+    Mid::should.have.ownProperty 'iok'
 
   describe 'use the injectMethods(AOP) to hook', ->
     class OneAbility
@@ -348,7 +413,7 @@ describe 'customAbility', ->
       a = new A 123
       OneAbility::$init.should.be.calledOnce
       OneAbility::$init.should.be.calledWith 123
-      
+
       t = OneAbility::$init.thisValues[0]
       t.should.have.property 'self', a
       oldInit.should.be.calledOnce
@@ -364,7 +429,7 @@ describe 'customAbility', ->
       a = new A 123
       OneAbility::$init.should.be.calledOnce
       OneAbility::$init.should.be.calledWith 123
-      
+
       t = OneAbility::$init.thisValues[0]
       t.should.be.equal a
     it 'should ignore some injectMethod', ->
@@ -379,4 +444,3 @@ describe 'customAbility', ->
       OneAbility::$init.should.not.be.called
       oldInit.should.be.calledOnce
       oldInit.should.be.calledWith 123
-      
