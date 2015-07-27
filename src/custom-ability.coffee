@@ -10,7 +10,7 @@ injectMethod    = require('util-ex/lib/injectMethod')
 defineProperty  = require('util-ex/lib/defineProperty')
 getNonEnumNames = require('util-ex/lib/get-non-enumerable-names')
 
-hasAbilityOnParent  = require('./has-ability-on-parent')
+isInjectedOnParent  = require('./injected-on-parent')
 
 
 injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
@@ -48,7 +48,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
         #vHasAddtionalAbility = hasAdditionalAbility aClass, vName
         # how to judge whether injected??
         $abilities = aClass::$abilities
-        vParentHasAbility = hasAbilityOnParent aClass, vName
+        vInjectedOnParent = isInjectedOnParent aClass, vName
         $abilities = null unless aClass::hasOwnProperty '$abilities'
       # inject the ability:
       if not (vhasCoreMethod or ($abilities and $abilities['$'+vName]))
@@ -63,7 +63,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           extendFilter aClass, AbilityClass, (k)-> not (k in vExcludes)
           if vAddtionalAbilityInjected
             aClassPrototype = vAddtionalAbilityInjected::
-          if !vParentHasAbility
+          if !vInjectedOnParent
             vExcludes = injectMethodsFromNonEnum aClassPrototype, AbilityClass::
             extend aClassPrototype, AbilityClass::, (k)-> not (k in vExcludes)
         else
@@ -99,12 +99,12 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           extendFilter aClass, AbilityClass, vFilter
           if vAddtionalAbilityInjected
             aClassPrototype = vAddtionalAbilityInjected::
-          if !vParentHasAbility
+          if !vInjectedOnParent
             extendFilter aClassPrototype, AbilityClass::, vFilter
           filterMethods aOptions.methods
           filterMethods aOptions.classMethods
         if aOptions?
-          if !vParentHasAbility and aOptions.methods instanceof Object
+          if !vInjectedOnParent and aOptions.methods instanceof Object
             injectMethods(aClassPrototype, aOptions.methods, aOptions)
           if aOptions.classMethods instanceof Object
             injectMethods(aClass, aOptions.classMethods, aOptions)
