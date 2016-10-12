@@ -10,14 +10,14 @@ consider these functions to extract, as a kind of ability to the user.
 
 ## Usage
 
-suppose we wanna add the RefCount ability to any class directly.
+Suppose we wanna add the RefCount ability to any class directly.
 
-the RefCount ability will add the following members to your class.
+the `RefCount` ability will add the following members to your class.
 and you should implement the `destroy` method which will be called
 by `release`/`free`.
 
 * properties:
-  * RefCount *(integer)*: the reference count.
+  * `RefCount` *(integer)*: the reference count.
 * methods:
   * `release()`/`free()`: Decrements reference count for this instance.
     If it is becoming less than 0, the object would be (self) destroyed.
@@ -29,6 +29,7 @@ These old methods will be lost. So, you must confirm whether there are the
 same methods in your class before you apply the new ability.
 
 ```coffee
+# ability.coffee
 customAbility = require 'custom-ability'
 
 class RefCountable
@@ -47,12 +48,14 @@ class RefCountable
   # the class methods if any:
   @someClassMethod: ->
 
-
+# We set the `addRef` method as the core methods.
+# The Core methods are the ability MUST have.
+# they're used to check the same ability whether the ability already added.
 module.exports = customAbility RefCountable, 'addRef'
 
 ```
 
-do not forget to add the `"ability"` keyword to your package.json which means
+Do not forget to add the `"ability"` keyword to your package.json which means
 the ability power with it.
 
 ```js
@@ -63,7 +66,7 @@ the ability power with it.
 ],
 ```
 
-do not forget to add the `"ability.js"` file on your package root folder too.
+Do not forget to add the `"ability.js"` file on your package root folder too.
 
 now user use this ability like this:
 
@@ -89,8 +92,8 @@ More complicated example, you can see the [events-ex/src/eventable.coffee](https
 ## additional $abilities
 
 In order to make certain ability to work, you need to modify some methods
-of the class. this time we need the "additional abilities" now. eg, the
-event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
+of the class which could call the old method. this time we need the
+"additional abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
 We need to send a notification event when the state of the object changes.
 So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
 should be:
@@ -109,7 +112,7 @@ module.exports = (aOptions)->
   aOptions = {} unless aOptions
   aOptions.methods = {} unless aOptions.methods
   extend aOptions.methods,
-    # override methods:
+    # override methods: (btw: classMethods to override the class methods)
     setObjectState: (value, emitted = true)->
       self= @self
       @super.call(self, value)
@@ -158,7 +161,7 @@ var customAbility = require('custom-ability')
 __arguments__
 
 * abilityClass *(function)*: the class will become to ability able.
-* coreMethod *(string|array)*: optional must have coreMethod(s).
+* coreMethod *(string|arrayOf string)*: optional must have coreMethod(s).
 * isGetClassFunction *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
   to return the real `Ability Class` if true. defaults to false.
 
@@ -178,7 +181,7 @@ the custom ability function has two arguments: `function(class[, options])`
     * value: the new method function, if original method is exists or not in replacedMethods:
       * use `this.super()` to call the original method.
       * `this.self` is the original `this` object.
-  * `classMethods` *(object)*: hooked class methods to the class, it's the same as the `methods`.
+  * `classMethods` *(object)*: hooked class methods to the class, it's the same usage as the `methods`.
   * `replacedMethods` *(array)*: the method name in the array will be replaced the original
     method directly.
 
