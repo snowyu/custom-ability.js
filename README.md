@@ -92,8 +92,8 @@ More complicated example, you can see the [events-ex/src/eventable.coffee](https
 ## additional $abilities
 
 In order to make certain ability to work, you need to modify some methods
-of the class which could call the old method. this time we need the
-"additional abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
+of the class which could call the old(original) method. this time we need
+the "additional abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
 We need to send a notification event when the state of the object changes.
 So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
 should be:
@@ -123,9 +123,10 @@ module.exports = (aOptions)->
   # more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
 ```
 
-the original `eventable('events-ex/eventable')` is no useful for AbstractObject.
+**TODO: need to more explain:**
+The original `eventable('events-ex/eventable')` is no useful for AbstractObject.
 
-but we wanna the original `eventable('events-ex/eventable')` knows the changes
+But we wanna the original `eventable('events-ex/eventable')` knows the changes
 and use it automatically.
 
 ```coffee
@@ -169,7 +170,7 @@ __return__
 
 * *(function)*: a function which can inject the ability to any class directly.
 
-the custom ability function has two arguments: `function(class[, options])`
+This custom ability injection function has two arguments: `function(class[, options])`
 
 * `class`: the class to be injected the ability.
 * `options` *(object)*: optional options
