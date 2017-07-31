@@ -4,3 +4,4 @@ node_modules/*
 .cache
 lib
 yarn.lock
+package-lock.json
