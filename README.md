@@ -191,40 +191,11 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 # Specification
 
+## V1.5.0
+
 * **broken change** the class method name conversation to: `@` prefix means class/static method.
   * include/exclude
   * coreMethod
-
-
-## V1.4.0
-
-
-## V1.3.3
-
-+ use the injectMethods(AOP) for the methods of non-enumerable and beginning with '$' in an ability
-  to call `super` method. you can exclude it with normal name if it's not a core method.
-
-```coffee
-customAbility = require 'custom-ability'
-
-class PropertyManagerAbility
-  constructor: ->@initialize.call @, arguments[gOptPos]
-  # the non-enumerable property and beginning with '$' will
-  # be injected to `initialize` method
-  defineProperty @::, '$initialize', ->
-    options = arugments[gOptPos]
-    options?={}
-    that = @
-    if @super and @self
-      inherited = @super
-      that = @self
-      inherited.apply(that, arugments)
-    that._initialize options if isFunction that._initialize
-    that.defineProperties(options.attributes)
-    that.assign(options)
-
-module.exports = customAbility PropertyManagerAbility, 'assign'
-```
 
 ## V1.4.x
 
@@ -285,6 +256,33 @@ Root::should.have.ownProperty 'two'
 Mid::should.have.ownProperty 'additional'
 Mid::should.have.ownProperty 'three'
 
+```
+
+## V1.3.3
+
++ use the injectMethods(AOP) for the methods of non-enumerable and beginning with '$' in an ability
+  to call `super` method. you can exclude it with normal name if it's not a core method.
+
+```coffee
+customAbility = require 'custom-ability'
+
+class PropertyManagerAbility
+  constructor: ->@initialize.call @, arguments[gOptPos]
+  # the non-enumerable property and beginning with '$' will
+  # be injected to `initialize` method
+  defineProperty @::, '$initialize', ->
+    options = arugments[gOptPos]
+    options?={}
+    that = @
+    if @super and @self
+      inherited = @super
+      that = @self
+      inherited.apply(that, arugments)
+    that._initialize options if isFunction that._initialize
+    that.defineProperties(options.attributes)
+    that.assign(options)
+
+module.exports = customAbility PropertyManagerAbility, 'assign'
 ```
 
 ## V1.3.x
