@@ -74,9 +74,8 @@ now user use this ability like this:
 refable = require 'ref-object/ability'
 
 class MyClass
-  refable MyClass
+  refable MyClass, exclude: '@someClassMethod' #someClassMethod would not be added to the class
   destroy: ->console.log 'destroy'
-
 
 my = new MyClass
 
@@ -163,6 +162,7 @@ __arguments__
 
 * abilityClass *(function)*: the class will become to ability able.
 * coreMethod *(string|arrayOf string)*: optional must have coreMethod(s).
+  * **note**: `@` prefix means class/static method.
 * isGetClassFunction *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
   to return the real `Ability Class` if true. defaults to false.
 
@@ -174,9 +174,11 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 * `class`: the class to be injected the ability.
 * `options` *(object)*: optional options
-  * `include `*(array|string)*: only these emitter methods will be added to the class
-  * `exclude `*(array|string)*: theses emitter methods would not be added to the class
-    * note: the `coreMethod` could not be excluded. It's always added to the class.
+  * `include `*(array|string)*: only these methods will be added to the class
+    * **note**: `@` prefix means class/static method.
+  * `exclude `*(array|string)*: these methods would not be added to the class
+    * **note**: the `coreMethod` could not be excluded. It's always added to the class.
+    * **note**: `@` prefix means class/static method.
   * `methods `*(object)*: injected/hooked methods to the class
     * key: the method name to hook.
     * value: the new method function, if original method is exists or not in replacedMethods:
@@ -188,6 +190,13 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 
 # Specification
+
+* **broken change** the class method name conversation to: `@` prefix means class/static method.
+  * include/exclude
+  * coreMethod
+
+
+## V1.4.0
 
 
 ## V1.3.3

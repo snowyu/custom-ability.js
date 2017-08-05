@@ -13,13 +13,14 @@ getNonEnumNames = require('util-ex/lib/get-non-enumerable-names')
 isInjectedOnParent  = require('./injected-on-parent')
 
 
-injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
+injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
   nonEnumNames = getNonEnumNames aObject
   result = []
   nonEnumNames.forEach (k)->
     if k[0] is '$' and isFunction(v = aObject[k])
       k = k.substr(1) # get rid of the first char '$'
-      if !filter or filter(k)
+      vK = if isStatic then '@'+k else k
+      if !filter or filter(vK)
         if isFunction aTargetClass[k]
           injectMethod aTargetClass, k, v
         else if aTargetClass[k]?
@@ -27,7 +28,7 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter)->
         else
           aTargetClass[k] = v
         delete aObject[k]
-        result.push k
+        result.push vK
     return
   result
 
@@ -43,7 +44,12 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
     if aClass?
       aClassPrototype = aClass::
       vhasCoreMethod = if isArray(aCoreMethod) then aCoreMethod[0] else aCoreMethod
-      vhasCoreMethod = aClass::hasOwnProperty(vhasCoreMethod)
+      if vhasCoreMethod
+        if vhasCoreMethod[0] isnt '@'
+          vhasCoreMethod = aClass::hasOwnProperty(vhasCoreMethod)
+        else
+          vhasCoreMethod = vhasCoreMethod.substr(1)
+          vhasCoreMethod = aClass.hasOwnProperty(vhasCoreMethod)
       if vName
         #vHasAddtionalAbility = hasAdditionalAbility aClass, vName
         # how to judge whether injected??
@@ -59,7 +65,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
         if not aOptions? or not (aOptions.include or aOptions.exclude)
           if vName
             vAddtionalAbilityInjected = injectAdditionalAbility aClass, vName, filterMethods
-          vExcludes = injectMethodsFromNonEnum aClass, AbilityClass
+          vExcludes = injectMethodsFromNonEnum aClass, AbilityClass, null, true
           extendFilter aClass, AbilityClass, (k)-> not (k in vExcludes)
           if vAddtionalAbilityInjected
             aClassPrototype = vAddtionalAbilityInjected::
@@ -82,9 +88,9 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
             vExcludes = [vExcludes] if not isArray vExcludes
           else
             vExcludes = []
-          vFilter = (k)-> filter k, vIncludes, vExcludes
-          vAbilities = injectMethodsFromNonEnum aClass, AbilityClass, vFilter
-          vAbilities = vAbilities.concat injectMethodsFromNonEnum aClass::, AbilityClass::, vFilter
+          vFilter = (isStatic)-> (k)-> filter k, vIncludes, vExcludes, isStatic
+          vAbilities = injectMethodsFromNonEnum aClass, AbilityClass, vFilter(true), true
+          vAbilities = vAbilities.concat injectMethodsFromNonEnum aClass::, AbilityClass::, vFilter()
           vExcludes = vExcludes.concat vAbilities
           vAbilities = undefined
           filterMethods = (methods)->
@@ -96,11 +102,11 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
           if vName
             vAddtionalAbilityInjected = injectAdditionalAbility aClass, vName, filterMethods
 
-          extendFilter aClass, AbilityClass, vFilter
+          extendFilter aClass, AbilityClass, vFilter(true)
           if vAddtionalAbilityInjected
             aClassPrototype = vAddtionalAbilityInjected::
           if !vInjectedOnParent
-            extendFilter aClassPrototype, AbilityClass::, vFilter
+            extendFilter aClassPrototype, AbilityClass::, vFilter()
           filterMethods aOptions.methods
           filterMethods aOptions.classMethods
         if aOptions?
@@ -121,7 +127,8 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
       aClass = AbilityClass
     aClass
   # return true to pass, return false to refuse.
-  abilityFn.filter = filter = (k, aIncludes, aExcludes)->
+  abilityFn.filter = filter = (k, aIncludes, aExcludes, aIsStatic)->
+    k = '@'+k if aIsStatic
     result = aIncludes.length
     if result
       result = k in aIncludes

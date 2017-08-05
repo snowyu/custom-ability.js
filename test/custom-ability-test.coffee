@@ -44,6 +44,13 @@ describe 'customAbility', ->
     My = testable1()
     My.should.be.equal MyAbility
 
+  it 'could no inject if have already static coreMethod', ->
+    testable1 = customAbility MyAbility, '@cone'
+    class My
+      @cone: 12
+    testable1 My
+    My.should.have.property 'cone', 12
+
   it 'could have no coreMethod', ->
     testable1 = customAbility MyAbility
     class Root
@@ -139,7 +146,7 @@ describe 'customAbility', ->
 
     testable My, include: [
       'one'
-      'ctwo'
+      '@ctwo'
     ]
 
     keys = Object.keys(My)
@@ -171,10 +178,11 @@ describe 'customAbility', ->
     testable My, exclude: [
       'one'
       'two'
-      'ctwo'
+      '@ctwo'
     ]
     keys = Object.keys(My)
     assert.deepEqual keys, ['cone']
+    My.should.not.have.ownProperty 'ctwo'
     keys = Object.keys(My.prototype)
     keys.sort()
     assert.deepEqual keys, [
