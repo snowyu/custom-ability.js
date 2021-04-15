@@ -160,7 +160,7 @@ var customAbility = require('custom-ability')
 
 __arguments__
 
-* abilityClass *(function)*: the class will become to ability able.
+* abilityClass *(function)*: the class will become to abilitiable.
 * coreMethod *(string|arrayOf string)*: optional must have coreMethod(s).
   * **note**: `@` prefix means class/static method.
 * isGetClassFunction *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
@@ -190,6 +190,39 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 
 # Specification
+
+## V1.6.0
+
+* **broken change** The methods in ES6 Class all are non-enumerable. So they have an ability to call `super` method too if the target has the same method.
+
+```javascript
+const createAbility = require('custom-ability')
+class MyFeature {
+  static coreAbilityClassMethod(){};
+  coreAbilityMethod(){};
+  init(){
+    if (this.super && this.self) {
+      inherited = this.super // the original init method
+      that = this.self       // the class instance
+      inherited.apply(that, arguments)
+    }
+    console.log('init from MyFeature')
+  };
+}
+
+const addFeatureTo = createAbility(MyFeature, ['coreAbilityMethod', '@coreAbilityClassMethod']);
+
+class MyClass {
+  init(hi) {
+    console.log('init from MyClass', hi)
+  }
+}
+// inject the static and instance methods to the MyClass.
+addFeatureTo(MyClass);
+const instance = new MyClass;
+instance.init('hello');
+
+```
 
 ## V1.5.0
 
@@ -261,7 +294,7 @@ Mid::should.have.ownProperty 'three'
 ## V1.3.3
 
 + use the injectMethods(AOP) for the methods of non-enumerable and beginning with '$' in an ability
-  to call `super` method. you can exclude it with normal name if it's not a core method.
+  to call `super` method if the target has the same method. you can exclude it with normal name if it's not a core method.
 
 ```coffee
 customAbility = require 'custom-ability'
@@ -271,13 +304,13 @@ class PropertyManagerAbility
   # the non-enumerable property and beginning with '$' will
   # be injected to `initialize` method
   defineProperty @::, '$initialize', ->
-    options = arugments[gOptPos]
+    options = arguments[gOptPos]
     options?={}
     that = @
     if @super and @self
       inherited = @super
       that = @self
-      inherited.apply(that, arugments)
+      inherited.apply(that, arguments)
     that._initialize options if isFunction that._initialize
     that.defineProperties(options.attributes)
     that.assign(options)
