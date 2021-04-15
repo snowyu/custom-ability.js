@@ -13,12 +13,13 @@ getNonEnumNames = require('util-ex/lib/get-non-enumerable-names')
 isInjectedOnParent  = require('./injected-on-parent')
 
 
+# return already injected method name list
 injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
   nonEnumNames = getNonEnumNames aObject
   result = []
   nonEnumNames.forEach (k)->
-    if k[0] is '$' and isFunction(v = aObject[k])
-      k = k.substr(1) # get rid of the first char '$'
+    if (isStatic or k isnt 'constructor') and isFunction(v = aObject[k])
+      k = k.substr(1)  if k[0] is '$' # get rid of the first char '$'
       vK = if isStatic then '@'+k else k
       if !filter or filter(vK)
         if isFunction aTargetClass[k]
@@ -27,7 +28,7 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
           throw new TypeError('the same non-null name is not function:'+k)
         else
           aTargetClass[k] = v
-        delete aObject[k]
+        # delete aObject[k]
         result.push vK
     return
   result
@@ -46,7 +47,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
       vhasCoreMethod = if isArray(aCoreMethod) then aCoreMethod[0] else aCoreMethod
       if vhasCoreMethod
         if vhasCoreMethod[0] isnt '@'
-          vhasCoreMethod = aClass::hasOwnProperty(vhasCoreMethod)
+          vhasCoreMethod = aClassPrototype.hasOwnProperty(vhasCoreMethod)
         else
           vhasCoreMethod = vhasCoreMethod.substr(1)
           vhasCoreMethod = aClass.hasOwnProperty(vhasCoreMethod)
@@ -56,7 +57,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
         $abilities = aClass::$abilities
         vInjectedOnParent = isInjectedOnParent aClass, vName
         $abilities = null unless aClass::hasOwnProperty '$abilities'
-      # inject the ability:
+      # inject the ability only the aClass has no CoreMethod and $abilities['$'+vName]:
       if not (vhasCoreMethod or ($abilities and $abilities['$'+vName]))
         # if vName
         #   # flag this ability is already injected on the aClass.
