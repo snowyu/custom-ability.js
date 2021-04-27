@@ -668,4 +668,43 @@ describe('customAbility with es6', function() {
       oldInit.should.be.calledWith(123);
     });
   });
+  describe('How to ensure that the injected object does not have the same method', function() {
+    var init = sinon.spy()
+    var emit = sinon.spy()
+    class TheAbility {
+      constructor() {
+        this.init.apply(this, arguments)
+      }
+      init() {
+        var Super = this.super
+        var that = this.self || this
+        if (Super) {
+          Super.apply(that, arguments)
+        }
+        init.apply(that, arguments)
+      }
+      emit() {
+        emit.apply(this, arguments)
+      }
+    }
+    var testable = customAbility(TheAbility, 'emit');
+    it('should call init correctly', () => {
+      var oInit = sinon.spy()
+      class My {
+        constructor() {
+          this.init.apply(this, arguments)
+        }
+        init() {
+          oInit.apply(this, arguments)
+        }
+      }
+
+      testable(My)
+      new My(5,3,1)
+      init.should.be.calledOnce
+      init.should.be.calledWith(5,3,1)
+      oInit.should.be.calledOnce
+      oInit.should.be.calledWith(5,3,1)
+    });
+  });
 });

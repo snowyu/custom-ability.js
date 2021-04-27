@@ -251,14 +251,14 @@ testable = customAbility Test #convert the class to testable ability
 
 class Root
   $abilities:
-    Test: -> # additinal ability to Test
+    Test: -> # additional ability to Test
       methods:
         additional:->
         two: ->
 class Mid
   inherits Mid, Root
   $abilities:
-    Test: -> # additinal ability to Test
+    Test: -> # additional ability to Test
       methods:
         additional:-> Mid.__super__.additional.apply(@, arguments)
         three: ->
