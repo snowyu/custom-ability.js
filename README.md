@@ -1,12 +1,11 @@
-### custom-ability [![Build Status](https://img.shields.io/travis/snowyu/custom-ability.js/master.png)](http://travis-ci.org/snowyu/custom-ability.js) [![npm](https://img.shields.io/npm/v/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![downloads](https://img.shields.io/npm/dm/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![license](https://img.shields.io/npm/l/custom-ability.svg)](https://npmjs.org/package/custom-ability)
+# custom-ability [![Build Status](https://img.shields.io/travis/snowyu/custom-ability.js/master.png)](http://travis-ci.org/snowyu/custom-ability.js) [![npm](https://img.shields.io/npm/v/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![downloads](https://img.shields.io/npm/dm/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![license](https://img.shields.io/npm/l/custom-ability.svg)](https://npmjs.org/package/custom-ability)
 
 generate the ability which can be added to any class directly.
 It makes custom ability more easy.
 
-Sometimes, we still feel that the class is a liitle big, and  too many features in it.
+Sometimes, we still feel that the class is a little big, and  too many features in it.
 We just need some of the features(methods) inside. So as a class developer can
 consider these functions to extract, as a kind of ability to the user.
-
 
 ## Usage
 
@@ -87,7 +86,6 @@ my.free() # print the 'destroy' here.
 
 More complicated example, you can see the [events-ex/src/eventable.coffee](https://github.com/snowyu/events-ex.js).
 
-
 ## additional $abilities
 
 In order to make certain ability to work, you need to modify some methods
@@ -148,7 +146,7 @@ AbstractObject.$abilities =
 module.exports = AbstractObject
 ```
 
-# API
+## API
 
 just one function:
 
@@ -156,7 +154,7 @@ just one function:
 var customAbility = require('custom-ability')
 ```
 
-## customAbility(abilityClass[, coreMethod[, isGetClassFunction]])
+### customAbility(abilityClass[, coreMethod[, isGetClassFunction]])
 
 __arguments__
 
@@ -174,12 +172,12 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 * `class`: the class to be injected the ability.
 * `options` *(object)*: optional options
-  * `include `*(array|string)*: only these methods will be added to the class
+  * `include`*(array|string)*: only these methods will be added to the class
     * **note**: `@` prefix means class/static method.
-  * `exclude `*(array|string)*: these methods would not be added to the class
+  * `exclude`*(array|string)*: these methods would not be added to the class
     * **note**: the `coreMethod` could not be excluded. It's always added to the class.
     * **note**: `@` prefix means class/static method.
-  * `methods `*(object)*: injected/hooked methods to the class
+  * `methods`*(object)*: injected/hooked methods to the class
     * key: the method name to hook.
     * value: the new method function, if original method is exists or not in replacedMethods:
       * use `this.super()` to call the original method.
@@ -188,10 +186,9 @@ This custom ability injection function has two arguments: `function(class[, opti
   * `replacedMethods` *(array)*: the method name in the array will be replaced the original
     method directly.
 
+## Specification
 
-# Specification
-
-## V1.6.0
+### V1.6.0
 
 * **broken change** The methods in ES6 Class all are non-enumerable. So they have an ability to call `super` method too if the target has the same method.
 
@@ -225,13 +222,13 @@ instance.init('hello');
 
 ```
 
-## V1.5.0
+### V1.5.0
 
 * **broken change** the class method name conversation to: `@` prefix means class/static method.
   * include/exclude
   * coreMethod
 
-## V1.4.x
+### V1.4.x
 
 * Inject additional ability to each parent classes When the some parent classes has additional ability,
   and mark it has been injected. note: the additional ability does not include the ability itself.
@@ -292,7 +289,7 @@ Mid::should.have.ownProperty 'three'
 
 ```
 
-## V1.3.3
+### V1.3.3
 
 + use the injectMethods(AOP) for the methods of non-enumerable and beginning with '$' in an ability
   to call `super` method if the target has the same method. you can exclude it with normal name if it's not a core method.
@@ -319,10 +316,10 @@ class PropertyManagerAbility
 module.exports = customAbility PropertyManagerAbility, 'assign'
 ```
 
-## V1.3.x
+### V1.3.x
 
-+ add the replaceMethods option to custom ability function.
-* **<broken change>**: additional abilities usage changed
+* add the replaceMethods option to custom ability function.
+* **`<broken change>`**: additional abilities usage changed
   * separate ability options object.
 
 * Put the '$abilities'*(object)* property on your prototype of class if need to modify
@@ -373,8 +370,7 @@ the AbstractObject's 'eventable' function:
     eventable aClass, eventableOptions(aOptions)
   ```
 
-
-## V1.2.x *(deprecated)*
+### V1.2.x *(deprecated)*
 
 * Put the 'ability.js' file in your NPM Package folder which means this can be
   as ability. So you can use this way to get the ability:
