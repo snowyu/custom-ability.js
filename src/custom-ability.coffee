@@ -29,7 +29,7 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
         else
           aTargetClass[k] = v
         # delete aObject[k]
-        result.push vK
+        result.push k
     return
   result
 
@@ -72,7 +72,7 @@ module.exports = (abilityClass, aCoreMethod, isGetClassFunc)->
             aClassPrototype = vAddtionalAbilityInjected::
           if !vInjectedOnParent
             vExcludes = injectMethodsFromNonEnum aClassPrototype, AbilityClass::
-            extend aClassPrototype, AbilityClass::, (k)-> not (k in vExcludes)
+            extendFilter aClassPrototype, AbilityClass::, (k)-> not (k in vExcludes)
         else
           vIncludes = aOptions.include
           if vIncludes

@@ -563,7 +563,8 @@ describe('customAbility with es6', function() {
     Mid.prototype.should.have.ownProperty('additional');
     Mid.prototype.should.have.ownProperty('iok');
   });
-  return describe('use the injectMethods(AOP) to hook', function() {
+
+  describe('use the injectMethods(AOP) to hook', function() {
     var oneTestable;
     class OneAbility {};
 
@@ -580,6 +581,8 @@ describe('customAbility with es6', function() {
     OneAbility.prototype.three = sinon.spy();
 
     OneAbility.prototype.emit = sinon.spy();
+
+    OneAbility.prototype.init = sinon.spy();
 
     OneAbility.cone = sinon.spy();
 
@@ -615,6 +618,7 @@ describe('customAbility with es6', function() {
       oneTestable(A);
 
       a = new A(123);
+      OneAbility.prototype.init.should.not.be.called;
       OneAbility.prototype.$init.should.be.calledOnce;
       OneAbility.prototype.$init.should.be.calledWith(123);
       t = OneAbility.prototype.$init.thisValues[0];
