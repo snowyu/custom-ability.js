@@ -201,11 +201,12 @@ class MyFeature {
   static coreAbilityClassMethod(){};
   coreAbilityMethod(){};
   init(){
-    if (this.super && this.self) {
-      inherited = this.super // the original init method
-      that = this.self       // the class instance
-      inherited.apply(that, arguments)
+    const Super = this.super // the original init method
+    const that = this.self || this // the instance
+    if (Super) {
+      Super.apply(that, arguments)
     }
+    // do the init from MyFeature
     console.log('init from MyFeature')
   };
 }
