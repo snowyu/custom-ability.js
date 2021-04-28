@@ -188,6 +188,68 @@ This custom ability injection function has two arguments: `function(class[, opti
 
 ## Specification
 
+### V1.6.2
+
+* fix: use replace instead inject method if there is no such method on the target
+
+  ```javascript
+  const makeAbility = require('custom-ability')
+  class Feature {
+    $init() {
+      const Super = this.super
+      const that = this.self || this
+      if (Super) {
+        if (Super.apply(that, arguments) === 'ok') return
+      }
+      that._init.apply(that, arguments)
+    }
+    _init() {console.log('feature init')}
+  }
+  Feature.prototype.init = function() {this._init.apply(this, arguments)}
+  const addFeatureTo = makeAbility(Feature)
+
+  class My {
+  }
+  addFeatureTo(My)
+  expect(My.prototype.init).toStrictEqual(Feature.prototype.init)
+  ```
+
+* fix(1.6.1): the injectMethods(AOP) starting with "$" was incorrectly replaced with the original method
+
+  ```js
+  const makeAbility = require('custom-ability')
+  class Feature {
+    // inject to the init method on target class
+    $init() {
+      const Super = this.super
+      const that = this.self || this
+      if (Super) {
+        if (Super.apply(that, arguments) === 'ok') return
+      }
+      that._init.apply(that, arguments)
+    }
+    _init() {console.log('feature init')}
+  }
+  Feature.prototype.init = function() {this._init.apply(this, arguments)}
+  const addFeatureTo = makeAbility(Feature)
+
+  class My {
+    init(doInitFeature = true) {
+      // the my init procedure
+      console.log('my init')
+      if (!doInitFeature) return 'ok'
+    }
+  }
+  addFeatureTo(My)
+  const obj = new My
+  obj.init()
+  // my init
+  // feature init
+  obj.init(false)
+  // my init
+  ```
+
+
 ### V1.6.0
 
 * **broken change** The methods in ES6 Class all are non-enumerable. So they have an ability to call `super` method too if the target has the same method.

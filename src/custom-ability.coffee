@@ -19,7 +19,8 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
   result = []
   nonEnumNames.forEach (k)->
     if (isStatic or k isnt 'constructor') and isFunction(v = aObject[k])
-      k = k.substr(1)  if k[0] is '$' # get rid of the first char '$'
+      is$ = k[0] is '$'
+      k = k.substr(1)  if is$ # get rid of the first char '$'
       vK = if isStatic then '@'+k else k
       if !filter or filter(vK)
         if isFunction aTargetClass[k]
@@ -27,6 +28,7 @@ injectMethodsFromNonEnum = (aTargetClass, aObject, filter, isStatic)->
         else if aTargetClass[k]?
           throw new TypeError('the same non-null name is not function:'+k)
         else
+          v = aObject[k] if (is$ and aObject[k])
           aTargetClass[k] = v
         # delete aObject[k]
         result.push k

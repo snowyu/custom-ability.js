@@ -582,6 +582,107 @@ describe('customAbility with es6', function() {
 
     OneAbility.prototype.emit = sinon.spy();
 
+    OneAbility.cone = sinon.spy();
+
+    OneAbility.ctwo = sinon.spy();
+
+    oneTestable = customAbility(OneAbility, 'emit');
+    beforeEach(function() {
+      var k, ref, v;
+      OneAbility.prototype.$init.reset();
+      for (k in OneAbility) {
+        v = OneAbility[k];
+        v.reset();
+      }
+      ref = OneAbility.prototype;
+      for (k in ref) {
+        v = ref[k];
+        v.reset();
+      }
+    });
+    it('should injectMethod correctly', function() {
+      var a, oldInit, t;
+      oldInit = sinon.spy();
+      class A {
+        constructor() {
+          this.hi = 123;
+          this.init.apply(this, arguments);
+        }
+
+      };
+
+      A.prototype.init = oldInit;
+
+      oneTestable(A);
+
+      a = new A(123);
+      OneAbility.prototype.$init.should.be.calledOnce;
+      OneAbility.prototype.$init.should.be.calledWith(123);
+      t = OneAbility.prototype.$init.thisValues[0];
+      t.should.have.property('self', a);
+      oldInit.should.be.calledOnce;
+      oldInit.should.be.calledWith(123);
+    });
+    it('should injectMethod non-exist correctly', function() {
+      var a, oldInit, t;
+      oldInit = sinon.spy();
+      class A {
+        constructor() {
+          this.hi = 123;
+          this.init.apply(this, arguments);
+        }
+
+      };
+
+      oneTestable(A);
+
+      a = new A(123);
+      OneAbility.prototype.$init.should.be.calledOnce;
+      OneAbility.prototype.$init.should.be.calledWith(123);
+      t = OneAbility.prototype.$init.thisValues[0];
+      t.should.be.equal(a);
+    });
+    it('should ignore some injectMethod', function() {
+      var a, oldInit;
+      oldInit = sinon.spy();
+      class A {
+        constructor() {
+          this.hi = 123;
+          this.init.apply(this, arguments);
+        }
+
+      };
+
+      A.prototype.init = oldInit;
+
+      oneTestable(A, {
+        exclude: 'init'
+      });
+
+      a = new A(123);
+      OneAbility.prototype.$init.should.not.be.called;
+      oldInit.should.be.calledOnce;
+      oldInit.should.be.calledWith(123);
+    });
+  });
+  describe('use the injectMethods(AOP) to hook(with same method)', function() {
+    var oneTestable;
+    class OneAbility {};
+
+    defineProperty(OneAbility.prototype, '$init', sinon.spy(function() {
+      if (this.super) {
+        return this.super.apply(this.self, arguments);
+      }
+    }));
+
+    OneAbility.prototype.one = sinon.spy();
+
+    OneAbility.prototype.two = sinon.spy();
+
+    OneAbility.prototype.three = sinon.spy();
+
+    OneAbility.prototype.emit = sinon.spy();
+
     OneAbility.prototype.init = sinon.spy();
 
     OneAbility.cone = sinon.spy();
@@ -640,9 +741,10 @@ describe('customAbility with es6', function() {
       oneTestable(A);
 
       a = new A(123);
-      OneAbility.prototype.$init.should.be.calledOnce;
-      OneAbility.prototype.$init.should.be.calledWith(123);
-      t = OneAbility.prototype.$init.thisValues[0];
+      OneAbility.prototype.$init.should.not.be.called;
+      OneAbility.prototype.init.should.be.calledOnce;
+      OneAbility.prototype.init.should.be.calledWith(123);
+      t = OneAbility.prototype.init.thisValues[0];
       t.should.be.equal(a);
     });
     it('should ignore some injectMethod', function() {
