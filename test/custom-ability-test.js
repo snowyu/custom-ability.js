@@ -1,24 +1,13 @@
-var assert, chai, customAbility, defineProperty, inherits, setImmediate, should, sinon, sinonChai;
-
-chai = require('chai');
-
-sinon = require('sinon');
-
-sinonChai = require('sinon-chai');
-
-should = chai.should();
-
-assert = chai.assert;
-
+const chai = require('chai');
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
+const should = chai.should();
+const assert = chai.assert;
 chai.use(sinonChai);
-
-customAbility = require('../src/custom-ability');
-
-inherits = require('inherits-ex/lib/inherits');
-
-defineProperty = require('util-ex/lib/defineProperty');
-
-setImmediate = setImmediate || process.nextTick;
+const customAbility = require('../src/custom-ability');
+const inherits = require('inherits-ex/lib/inherits');
+const defineProperty = require('util-ex/lib/defineProperty');
+var setImmediate = setImmediate || process.nextTick;
 
 function all_stub_reset(obj) {
   for (let k in obj) {
@@ -27,23 +16,26 @@ function all_stub_reset(obj) {
   }
 }
 
-describe('customAbility with es6', function() {
-  var myAbilityCheck, testable;
-  class MyAbility {};
+describe('customAbility', function() {
+  var MyAbility, myAbilityCheck, testable;
+  MyAbility = (function() {
+    function MyAbility() {}
 
-  MyAbility.prototype.one = sinon.spy();
+    MyAbility.prototype.one = sinon.spy();
 
-  MyAbility.prototype.two = sinon.spy();
+    MyAbility.prototype.two = sinon.spy();
 
-  MyAbility.prototype.three = sinon.spy();
+    MyAbility.prototype.three = sinon.spy();
 
-  MyAbility.prototype.emit = sinon.spy();
+    MyAbility.prototype.emit = sinon.spy();
 
-  MyAbility.cone = sinon.spy();
+    MyAbility.cone = sinon.spy();
 
-  MyAbility.ctwo = sinon.spy();
+    MyAbility.ctwo = sinon.spy();
 
+    return MyAbility;
 
+  })();
   testable = customAbility(MyAbility, 'emit');
   beforeEach(function() {
     all_stub_reset(MyAbility);
@@ -63,27 +55,14 @@ describe('customAbility with es6', function() {
     }
     return results;
   };
-  it('should create a simple ability', function() {
-    class MyFeature {
-      static coreAbilityClassMethod(){};
-      coreAbilityMethod(){};
-      additionalAbilityMethod(){};
-    }
-    MyFeature.additionalClassMethod = function() {}
-
-    const addFeatureTo = customAbility(MyFeature, ['coreAbilityMethod', '@coreAbilityClassMethod']);
-
-    class MyClass {
-      someMethod() {}
-    }
-    // inject the static and instance methods to the MyClass.
-    addFeatureTo(MyClass);
-    MyClass.should.have.ownProperty('coreAbilityClassMethod')
-
-  });
   it('could use getAbilityClass', function() {
     var My, getAbilityClass, result, testable1;
-    My = class My {};
+    My = (function() {
+      function My() {}
+
+      return My;
+
+    })();
     getAbilityClass = function(aClass) {
       return MyAbility;
     };
@@ -102,24 +81,33 @@ describe('customAbility with es6', function() {
     var My, testable1;
     testable1 = customAbility(MyAbility, '@cone');
     My = (function() {
-      class My {};
+      function My() {}
 
       My.cone = 12;
 
       return My;
 
-    }).call(this);
+    })();
     testable1(My);
     return My.should.have.property('cone', 12);
   });
   it('could have no coreMethod', function() {
-    var k, result, results, testable1;
+    var My, Root, k, result, results, testable1;
     testable1 = customAbility(MyAbility);
-    class Root {};
-    class My {};
+    Root = (function() {
+      function Root() {}
 
-    inherits(My, Root);
+      return Root;
 
+    })();
+    My = (function() {
+      function My() {}
+
+      inherits(My, Root);
+
+      return My;
+
+    })();
     result = testable1(Root);
     result.should.be.equal(Root);
     myAbilityCheck(result);
@@ -135,24 +123,33 @@ describe('customAbility with es6', function() {
     return results;
   });
   it('should add multi abilities on same class', function() {
-    var My, Root, k, ref, ref1, result, results, testable1, testable2, v;
-    class OtherAbility {
-      ding() {}
+    var My, OtherAbility, Root, k, ref, ref1, result, results, testable1, testable2, v;
+    OtherAbility = (function() {
+      function OtherAbility() {}
 
-      static sth() {}
+      OtherAbility.prototype.ding = function() {};
 
-    };
+      OtherAbility.sth = function() {};
+
+      return OtherAbility;
+
+    })();
     testable1 = customAbility(MyAbility);
     testable2 = customAbility(OtherAbility);
-    Root = class Root {};
+    Root = (function() {
+      function Root() {}
+
+      return Root;
+
+    })();
     My = (function() {
-      class My {};
+      function My() {}
 
       inherits(My, Root);
 
       return My;
 
-    }).call(this);
+    })();
     result = testable1(Root);
     result.should.be.equal(Root);
     for (k in MyAbility) {
@@ -213,7 +210,7 @@ describe('customAbility with es6', function() {
   it('should use getClass function to make ability ', function() {
     var My, fn, k, ref, testable1, v;
     fn = function(aClass, aOptions) {
-      MyAbility.class = aClass;
+      MyAbility["class"] = aClass;
       return MyAbility;
     };
     testable1 = customAbility(fn, 'emit', true);
@@ -228,9 +225,9 @@ describe('customAbility with es6', function() {
       v = ref[k];
       v.should.be.equal(My.prototype[k]);
     }
-    should.exist(MyAbility.class);
-    MyAbility.class.should.be.equal(My);
-    return delete MyAbility.class;
+    should.exist(MyAbility["class"]);
+    MyAbility["class"].should.be.equal(My);
+    return delete MyAbility["class"];
   });
   it('should get proper aClass in getClass function to make ability ', function() {
     var My, MyA, fn, k, my, ref, testable1, v;
@@ -238,7 +235,7 @@ describe('customAbility with es6', function() {
     fn = function(aClass, aOptions) {
       var MyAbility1;
       return MyA = MyAbility1 = (function() {
-        class MyAbility1 {};
+        function MyAbility1() {}
 
         MyAbility1.prototype.emit = sinon.spy();
 
@@ -251,7 +248,7 @@ describe('customAbility with es6', function() {
 
         return MyAbility1;
 
-      }).call(this);
+      })();
     };
     testable1 = customAbility(fn, 'emit', true);
     My = function() {};
@@ -265,7 +262,7 @@ describe('customAbility with es6', function() {
       v = ref[k];
       v.should.be.equal(My.prototype[k]);
     }
-    my = new My();
+    my = new My;
     my.one();
     return my.one.should.be.calledOnce;
   });
@@ -340,7 +337,7 @@ describe('customAbility with es6', function() {
         }
       }
     });
-    my = new My();
+    my = new My;
     my.exec();
     assert.equal(oldExec, true, 'should execute the original func');
     assert.equal(newExec, true, 'should execute the new func');
@@ -362,8 +359,6 @@ describe('customAbility with es6', function() {
     oldExec.should.be.calledOnce;
     oldExec.should.be.calledWith(1, 2, 3);
   });
-  //assert.equal oldExec, true, 'should execute the original func'
-  //assert.equal newExec, true, 'should execute the new func'
   it('should not inject methods twice', function() {
     var My, Root, my, newExec, oldExec;
     newExec = 0;
@@ -390,13 +385,13 @@ describe('customAbility with es6', function() {
         }
       }
     });
-    my = new My();
+    my = new My;
     my.exec();
     assert.equal(oldExec, 1, 'should execute the original func once');
     assert.equal(newExec, 1, 'should execute the new func once');
   });
   it('should use additional abilities', function() {
-    var opt, testableOpts;
+    var My, opt, testableOpts;
     testableOpts = function() {
       return {
         methods: {
@@ -404,19 +399,23 @@ describe('customAbility with es6', function() {
         }
       };
     };
-    class My {};
+    My = (function() {
+      function My() {}
 
-    My.prototype.$abilities = {
-      MyAbility: testableOpts
-    };
+      My.prototype.$abilities = {
+        MyAbility: testableOpts
+      };
 
+      return My;
+
+    })();
     opt = {};
     testable(My, opt);
     My.prototype.should.have.ownProperty('addtional');
     myAbilityCheck(My);
   });
   it('should use inherited additional abilities', function() {
-    var my, myOpts, opt, overMy, overRoot, rootOpts;
+    var My, Root, my, myOpts, opt, overMy, overRoot, rootOpts;
     overRoot = sinon.spy();
     overMy = sinon.spy(function() {
       return My.__super__.over.apply(this, arguments);
@@ -437,27 +436,35 @@ describe('customAbility with es6', function() {
         }
       };
     };
-    class Root {};
+    Root = (function() {
+      function Root() {}
 
-    Root.prototype.$abilities = {
-      MyAbility: rootOpts
-    };
+      Root.prototype.$abilities = {
+        MyAbility: rootOpts
+      };
 
-    class My {};
+      return Root;
 
-    inherits(My, Root);
+    })();
+    My = (function() {
+      function My() {}
 
-    My.prototype.$abilities = {
-      MyAbility: myOpts
-    };
+      inherits(My, Root);
 
+      My.prototype.$abilities = {
+        MyAbility: myOpts
+      };
+
+      return My;
+
+    })();
     opt = {};
     testable(My, opt);
     My.prototype.should.have.ownProperty('addtional');
     My.prototype.should.have.property('root');
     My.prototype.should.have.ownProperty('over');
     myAbilityCheck(My);
-    my = new My();
+    my = new My;
     my.over(1, 2, 3);
     overMy.should.have.been.calledOnce;
     overMy.should.have.been.calledWith(1, 2, 3);
@@ -465,7 +472,7 @@ describe('customAbility with es6', function() {
     overRoot.should.have.been.calledWith(1, 2, 3);
   });
   it('should use additional ability via multi classes', function() {
-    var opt, overRoot, rootOpts;
+    var My, My1, Root, opt, overRoot, rootOpts;
     overRoot = sinon.spy();
     rootOpts = function() {
       return {
@@ -475,20 +482,32 @@ describe('customAbility with es6', function() {
         }
       };
     };
-    class Root {};
+    Root = (function() {
+      function Root() {}
 
-    Root.prototype.$abilities = {
-      MyAbility: rootOpts
-    };
+      Root.prototype.$abilities = {
+        MyAbility: rootOpts
+      };
 
-    class My {};
+      return Root;
 
-    inherits(My, Root);
+    })();
+    My = (function() {
+      function My() {}
 
-    class My1 {};
+      inherits(My, Root);
 
-    inherits(My1, Root);
+      return My;
 
+    })();
+    My1 = (function() {
+      function My1() {}
+
+      inherits(My1, Root);
+
+      return My1;
+
+    })();
     opt = {};
     testable(My, opt);
     My.prototype.should.have.property('root');
@@ -500,46 +519,56 @@ describe('customAbility with es6', function() {
     myAbilityCheck(My1);
   });
   it('should use additional ability via multi inherited classes', function() {
-    var k, ref, v;
-    class Root {};
+    var A, Mid, Root, k, ref, v;
+    Root = (function() {
+      function Root() {}
 
-    Root.prototype.$abilities = {
-      MyAbility: function() { // additinal ability to MyAbility
-        return {
-          methods: {
-            additional: function() {},
-            two: function() {}
-          }
-        };
-      }
-    };
+      Root.prototype.$abilities = {
+        MyAbility: function() {
+          return {
+            methods: {
+              additional: function() {},
+              two: function() {}
+            }
+          };
+        }
+      };
 
-    class Mid {};
+      return Root;
 
-    inherits(Mid, Root);
+    })();
+    Mid = (function() {
+      function Mid() {}
 
-    Mid.prototype.$abilities = {
-      MyAbility: function() { // additinal ability to MyAbility
-        return {
-          methods: {
-            additional: function() {
-              return Mid.__super__.additional.apply(this, arguments);
-            },
-            iok: function() {}
-          }
-        };
-      }
-    };
+      inherits(Mid, Root);
 
-    class A {};
+      Mid.prototype.$abilities = {
+        MyAbility: function() {
+          return {
+            methods: {
+              additional: function() {
+                return Mid.__super__.additional.apply(this, arguments);
+              },
+              iok: function() {}
+            }
+          };
+        }
+      };
 
-    inherits(A, Mid);
+      return Mid;
 
-    testable(A); // make the class A testable.
+    })();
+    A = (function() {
+      function A() {}
 
+      inherits(A, Mid);
+
+      testable(A);
+
+      return A;
+
+    })();
     myAbilityCheck(A);
-// A should have all static methods of Test
-// Mid,Root should have no any methods of Test
     for (k in MyAbility) {
       v = MyAbility[k];
       Mid.should.not.have.ownProperty(k);
@@ -548,43 +577,43 @@ describe('customAbility with es6', function() {
       v.should.be.equal(A[k]);
     }
     ref = MyAbility.prototype;
-    // A and Mid should have no any methods of Test
-    // the Root should have all methods of Test
     for (k in ref) {
       v = ref[k];
       A.prototype.should.not.have.ownProperty(k);
       Mid.prototype.should.not.have.ownProperty(k);
       Root.prototype.should.have.ownProperty(k);
     }
-    // Root should have additional methods:
     Root.prototype.should.have.ownProperty('additional');
     Root.prototype.should.have.ownProperty('two');
     Mid.prototype.should.have.ownProperty('additional');
-    Mid.prototype.should.have.ownProperty('iok');
+    return Mid.prototype.should.have.ownProperty('iok');
   });
+  return describe('use the injectMethods(AOP) to hook', function() {
+    var OneAbility, oneTestable;
+    OneAbility = (function() {
+      function OneAbility() {}
 
-  describe('use the injectMethods(AOP) to hook', function() {
-    var oneTestable;
-    class OneAbility {};
+      defineProperty(OneAbility.prototype, '$init', sinon.spy(function() {
+        if (this["super"]) {
+          return this["super"].apply(this.self, arguments);
+        }
+      }));
 
-    defineProperty(OneAbility.prototype, '$init', sinon.spy(function() {
-      if (this.super) {
-        return this.super.apply(this.self, arguments);
-      }
-    }));
+      OneAbility.prototype.one = sinon.spy();
 
-    OneAbility.prototype.one = sinon.spy();
+      OneAbility.prototype.two = sinon.spy();
 
-    OneAbility.prototype.two = sinon.spy();
+      OneAbility.prototype.three = sinon.spy();
 
-    OneAbility.prototype.three = sinon.spy();
+      OneAbility.prototype.emit = sinon.spy();
 
-    OneAbility.prototype.emit = sinon.spy();
+      OneAbility.cone = sinon.spy();
 
-    OneAbility.cone = sinon.spy();
+      OneAbility.ctwo = sinon.spy();
 
-    OneAbility.ctwo = sinon.spy();
+      return OneAbility;
 
+    })();
     oneTestable = customAbility(OneAbility, 'emit');
     beforeEach(function() {
       OneAbility.prototype.$init.resetHistory();
@@ -592,205 +621,72 @@ describe('customAbility with es6', function() {
       all_stub_reset(OneAbility.prototype);
     });
     it('should injectMethod correctly', function() {
-      var a, oldInit, t;
+      var A, a, oldInit, t;
       oldInit = sinon.spy();
-      class A {
-        constructor() {
+      A = (function() {
+        function A() {
           this.hi = 123;
           this.init.apply(this, arguments);
         }
 
-      };
+        A.prototype.init = oldInit;
 
-      A.prototype.init = oldInit;
+        oneTestable(A);
 
-      oneTestable(A);
+        return A;
 
+      })();
       a = new A(123);
       OneAbility.prototype.$init.should.be.calledOnce;
       OneAbility.prototype.$init.should.be.calledWith(123);
       t = OneAbility.prototype.$init.thisValues[0];
       t.should.have.property('self', a);
       oldInit.should.be.calledOnce;
-      oldInit.should.be.calledWith(123);
+      return oldInit.should.be.calledWith(123);
     });
     it('should injectMethod non-exist correctly', function() {
-      var a, oldInit, t;
+      var A, a, oldInit, t;
       oldInit = sinon.spy();
-      class A {
-        constructor() {
+      A = (function() {
+        function A() {
           this.hi = 123;
           this.init.apply(this, arguments);
         }
 
-      };
+        oneTestable(A);
 
-      oneTestable(A);
+        return A;
 
+      })();
       a = new A(123);
       OneAbility.prototype.$init.should.be.calledOnce;
       OneAbility.prototype.$init.should.be.calledWith(123);
       t = OneAbility.prototype.$init.thisValues[0];
-      t.should.be.equal(a);
+      return t.should.be.equal(a);
     });
-    it('should ignore some injectMethod', function() {
-      var a, oldInit;
+    return it('should ignore some injectMethod', function() {
+      var A, a, oldInit;
       oldInit = sinon.spy();
-      class A {
-        constructor() {
+      A = (function() {
+        function A() {
           this.hi = 123;
           this.init.apply(this, arguments);
         }
 
-      };
+        A.prototype.init = oldInit;
 
-      A.prototype.init = oldInit;
+        oneTestable(A, {
+          exclude: 'init'
+        });
 
-      oneTestable(A, {
-        exclude: 'init'
-      });
+        return A;
 
+      })();
       a = new A(123);
       OneAbility.prototype.$init.should.not.be.called;
       oldInit.should.be.calledOnce;
-      oldInit.should.be.calledWith(123);
-    });
-  });
-  describe('use the injectMethods(AOP) to hook(with same method)', function() {
-    var oneTestable;
-    class OneAbility {};
-
-    defineProperty(OneAbility.prototype, '$init', sinon.spy(function() {
-      if (this.super) {
-        return this.super.apply(this.self, arguments);
-      }
-    }));
-
-    OneAbility.prototype.one = sinon.spy();
-
-    OneAbility.prototype.two = sinon.spy();
-
-    OneAbility.prototype.three = sinon.spy();
-
-    OneAbility.prototype.emit = sinon.spy();
-
-    OneAbility.prototype.init = sinon.spy();
-
-    OneAbility.cone = sinon.spy();
-
-    OneAbility.ctwo = sinon.spy();
-
-    oneTestable = customAbility(OneAbility, 'emit');
-    beforeEach(function() {
-      var k, ref, v;
-      OneAbility.prototype.$init.resetHistory();
-      all_stub_reset(OneAbility)
-      all_stub_reset(OneAbility.prototype)
-    });
-    it('should injectMethod correctly', function() {
-      var a, oldInit, t;
-      oldInit = sinon.spy();
-      class A {
-        constructor() {
-          this.hi = 123;
-          this.init.apply(this, arguments);
-        }
-
-      };
-
-      A.prototype.init = oldInit;
-
-      oneTestable(A);
-
-      a = new A(123);
-      OneAbility.prototype.init.should.not.be.called;
-      OneAbility.prototype.$init.should.be.calledOnce;
-      OneAbility.prototype.$init.should.be.calledWith(123);
-      t = OneAbility.prototype.$init.thisValues[0];
-      t.should.have.property('self', a);
-      oldInit.should.be.calledOnce;
-      oldInit.should.be.calledWith(123);
-    });
-    it('should injectMethod non-exist correctly', function() {
-      var a, oldInit, t;
-      oldInit = sinon.spy();
-      class A {
-        constructor() {
-          this.hi = 123;
-          this.init.apply(this, arguments);
-        }
-
-      };
-
-      oneTestable(A);
-
-      a = new A(123);
-      OneAbility.prototype.$init.should.not.be.called;
-      OneAbility.prototype.init.should.be.calledOnce;
-      OneAbility.prototype.init.should.be.calledWith(123);
-      t = OneAbility.prototype.init.thisValues[0];
-      t.should.be.equal(a);
-    });
-    it('should ignore some injectMethod', function() {
-      var a, oldInit;
-      oldInit = sinon.spy();
-      class A {
-        constructor() {
-          this.hi = 123;
-          this.init.apply(this, arguments);
-        }
-
-      };
-
-      A.prototype.init = oldInit;
-
-      oneTestable(A, {
-        exclude: 'init'
-      });
-
-      a = new A(123);
-      OneAbility.prototype.$init.should.not.be.called;
-      oldInit.should.be.calledOnce;
-      oldInit.should.be.calledWith(123);
-    });
-  });
-  describe('How to ensure that the injected object does not have the same method', function() {
-    var init = sinon.spy()
-    var emit = sinon.spy()
-    class TheAbility {
-      constructor() {
-        this.init.apply(this, arguments)
-      }
-      init() {
-        var Super = this.super
-        var that = this.self || this
-        if (Super) {
-          Super.apply(that, arguments)
-        }
-        init.apply(that, arguments)
-      }
-      emit() {
-        emit.apply(this, arguments)
-      }
-    }
-    var testable = customAbility(TheAbility, 'emit');
-    it('should call init correctly', () => {
-      var oInit = sinon.spy()
-      class My {
-        constructor() {
-          this.init.apply(this, arguments)
-        }
-        init() {
-          oInit.apply(this, arguments)
-        }
-      }
-
-      testable(My)
-      new My(5,3,1)
-      init.should.be.calledOnce
-      init.should.be.calledWith(5,3,1)
-      oInit.should.be.calledOnce
-      oInit.should.be.calledWith(5,3,1)
+      return oldInit.should.be.calledWith(123);
     });
   });
 });
+
