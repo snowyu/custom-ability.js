@@ -13,29 +13,32 @@
     "lib"
   ],
   "scripts": {
-    "test": "grunt test"
+    "build": "npm run build.cjs",
+    "build.cjs": "mkdist --src=src --pattern=*.ts --dist=dist/cjs --format=cjs",
+    "build.mjs": "mkdist --src=src --pattern=*.ts --dist=dist/mjs --format=esm --ext=mjs",
+    "build.ts": "tsc",
+    "test": "mocha"
+  },
+  "engines": {
+    "node": ">=4"
   },
   "dependencies": {
-    "inherits-ex": "~1.3.0",
+    "inherits-ex": "~1.3.6",
     "util-ex": "^0.3.15"
   },
   "devDependencies": {
-    "chai": "~2.0.0",
-    "coffee-script": "^1.12.7",
-    "connect-livereload": "*",
-    "grunt": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-coffee": "1.0.0",
-    "grunt-contrib-copy": "*",
-    "grunt-contrib-jshint": "*",
-    "grunt-contrib-watch": "*",
-    "grunt-mocha-test": "~0.13.2",
-    "grunt-newer": "*",
-    "mocha": "~3.4.2",
-    "pre-commit": "~1.2.2",
-    "sinon": "~2.4.1",
-    "sinon-chai": "~2.12.0",
-    "source-map-support": "*"
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.15.3",
+    "@types/sinon": "^10.0.13",
+    "@types/sinon-chai": "^3.2.9",
+    "chai": "~4.3.7",
+    "esbuild-register": "^3.4.2",
+    "mkdist": "^1.1.2",
+    "mocha": "~10.2.0",
+    "sinon": "~15.0.2",
+    "sinon-chai": "~3.7.0",
+    "typescript": "^5.0.2"
   },
   "pre-commit": [
     "test"
