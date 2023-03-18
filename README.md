@@ -1,13 +1,28 @@
 # custom-ability [![Build Status](https://img.shields.io/travis/snowyu/custom-ability.js/master.png)](http://travis-ci.org/snowyu/custom-ability.js) [![npm](https://img.shields.io/npm/v/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![downloads](https://img.shields.io/npm/dm/custom-ability.svg)](https://npmjs.org/package/custom-ability) [![license](https://img.shields.io/npm/l/custom-ability.svg)](https://npmjs.org/package/custom-ability)
 
-generate the ability which can be added to any class directly.
-It makes custom ability more easy.
+This library provides a simple way to inject abilities into classes. An "ability"(a "mixin" class) is defined as a set of methods that can be added(injected) to a class to enhance its functionality.
 
-Sometimes, we still feel that the class is a little big, and  too many features in it.
-We just need some of the features(methods) inside. So as a class developer can
-consider these functions to extract, as a kind of ability to the user.
+Sometimes we may feel that a class is too large, containing too many features or methods. In such cases, as a developer, we can extract some of these functions as separate abilities, which users can use selectively based on their needs.
 
-## Usage
+**Features:**
+
+* Allows you to easily inject "abilities" (i.e. methods) from one class into another class, without needing to extend the target class.
+* Can inject both static and instance methods.
+* Allows you to specify a set of "core methods" for the ability class, which will be used to check if the ability has already been injected into a target class.
+* Prevents the same ability from being injected multiple times into the same class.
+  * The mechanism to prevent duplicate injection of the same ability is achieved through the `$abilities` member on the prototype of the target class. This member records all injected ability names (i.e. abilityClass.name).
+  * It will traverse and check the parent classes of the target class until it finds the `$abilities`.
+  * Additionally, if the `coreMethod` parameter is set, the first method name in `coreMethod` will also be checked in the target class.
+* Supports optional include and exclude parameters, which allow you to specify which methods should be injected or excluded from injection.
+* Supports optional methods and classMethods parameters, which allow you to inject additional methods into the target class.
+
+**Usage:**
+
+1. Define an ability class that contains the methods you want to inject into other classes.
+2. Use the customAbility function to create a new function that can inject the ability into target classes.
+3. Call the new function with the ability class and any optional parameters to inject the ability into a target class.
+
+## Examples
 
 Suppose we wanna add the RefCount ability to any class directly.
 
@@ -27,31 +42,38 @@ by `release`/`free`.
 These old methods will be lost. So, you must confirm whether there are the
 same methods in your class before you apply the new ability.
 
-```coffee
-# ability.coffee
-customAbility = require 'custom-ability'
+```js
+// ability.js
+const makeAbility = require('custom-ability')
 
-class RefCountable
-  # define the instance methods here:
-  release: ->
-      result = --@RefCount
-      @destroy() unless result >= 0
-      result
-  free: @::release
-  addRef: ->
-    if not isUndefined @RefCount
-      ++@RefCount
+class RefCountable {
+  // the class methods if any:
+  static someClassMethod() {}
+
+  //define the instance methods here:
+  release() {
+      let result = --this.RefCount
+      if (result < 0) this.destroy()
+      return result
+  }
+
+  free() {
+    return this.release()
+  }
+
+  addRef() {
+    if (!isUndefined(this.RefCount))
+      ++this.RefCount
     else
-      @RefCount = 1
+      this.RefCount = 1
+  }
 
-  # the class methods if any:
-  @someClassMethod: ->
+}
 
-# We set the `addRef` method as the core methods.
-# The Core methods are the ability MUST have.
-# they're used to check the same ability whether the ability already added.
-module.exports = customAbility RefCountable, 'addRef'
-
+// # We set the `addRef` method as the core methods.
+// # The Core methods are the ability MUST have.
+// # the first core method will be used to check the same ability whether the ability already added too.
+module.exports = makeAbility(RefCountable, 'addRef')
 ```
 
 Do not forget to add the `"ability"` keyword to your package.json which means
@@ -69,24 +91,31 @@ Do not forget to add the `"ability.js"` file on your package root folder too.
 
 now user use this ability like this:
 
-```coffee
-refable = require 'ref-object/ability'
+```js
+const addRefAbility = require('ref-object/ability')
 
-class MyClass
-  refable MyClass, exclude: '@someClassMethod' #someClassMethod would not be added to the class
-  destroy: ->console.log 'destroy'
+class MyClass {
+  destroy() {console.log('destroy')}
+}
 
-my = new MyClass
+// someClassMethod would not be added to the class
+addRefAbility(MyClass, exclude: '@someClassMethod')
 
-my.addRef()
-my.free() # nothing
-my.free() # print the 'destroy' here.
+const my = new MyClass
+
+my.addRef() // add reference count
+my.free() // dec reference count, do nothing
+my.free() // now destroy, print the 'destroy' here.
 
 ```
 
 More complicated example, you can see the [events-ex/src/eventable.coffee](https://github.com/snowyu/events-ex.js).
 
 ## additional $abilities
+
+Another type of injection is the "additional abilities" that can be injected using the methods and classMethods parameters. These additional methods are necessary when modifying existing methods of the target class to call the old/original method to make a certain ability work.
+
+The injected methods are encapsulated in a closure. And the passed `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
 
 In order to make certain ability to work, you need to modify some methods
 of the class which could call the old(original) method. this time we need
@@ -95,29 +124,34 @@ We need to send a notification event when the state of the object changes(life c
 So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
 should be:
 
-```coffee
-eventable         = require 'events-ex/eventable'
-eventableOptions  = require './eventable-options'
+```js
+const eventable         = require('events-ex/eventable')
+const eventableOptions  = require('./eventable-options')
 
-module.exports = (aClass, aOptions)->
-  eventable aClass, eventableOptions(aOptions)
+module.exports = function(aClass, aOptions){
+  return eventable(aClass, eventableOptions(aOptions))
+}
 ```
 
-```coffee
-# eventable-options.coffee
-module.exports = (aOptions)->
-  aOptions = {} unless aOptions
-  aOptions.methods = {} unless aOptions.methods
-  extend aOptions.methods,
-    # override methods: (btw: classMethods to override the class methods)
-    setObjectState: (value, emitted = true)->
-      self= @self
-      @super.call(self, value)
-      self.emit value, self if emitted
-      return
+```js
+// eventable-options.js
+module.exports = function (aOptions){
+  if (!aOptions) aOptions = {}
+  if (!aOptions.methods) aOptions.methods = {}
+  extend( aOptions.methods, {
+    // override methods: (btw: classMethods to override the class methods)
+    setObjectState(value, emitted = true) {
+      // The injected methods are encapsulated in a closure.
+      // The `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
+      self= this.self
+      this.super.setObjectState.call(self, value)
+      if (emitted) self.emit(value, self)
+    }
+  })
   ...
   return aOptions
-  # more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
+  // more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
+}
 ```
 
 **TODO: need to more explain:**
@@ -126,65 +160,77 @@ The original `eventable('events-ex/eventable')` is no useful for AbstractObject.
 But we wanna the original `eventable('events-ex/eventable')` knows the changes
 and use it automatically.
 
-```coffee
-eventable         = require 'events-ex/eventable'
+```js
+const eventable         = require 'events-ex/eventable'
 
-class MyClass
-  inherits MyClass, AbstractObject
-  eventable MyClass
+class MyClass extends AbstractObject {}
+// inherits MyClass, AbstractObject
+eventable(MyClass)
 ```
 
 you just do this on the AbstractObject:
 
-```coffee
-AbstractObject = require('./lib/abstract-object')
+```js
+const AbstractObject = require('./lib/abstract-object')
 
-AbstractObject.$abilities =
-  # "Eventable" is the AbilityClass name
+AbstractObject.$abilities = {
+  // "Eventable" is the AbilityClass name
   Eventable: require('./lib/eventable-options')
+}
 
 module.exports = AbstractObject
 ```
 
 ## API
 
-just one function:
+This library provides a function customAbility that can inject the abilities of a "mixin" class onto another target class or object.
+
+Abilities can be defined as static or instance methods on the "mixin" class.
 
 ```js
 var customAbility = require('custom-ability')
 ```
 
-### customAbility(abilityClass[, coreMethod[, isGetClassFunction]])
+### customAbility(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false): WithAbilityFn
 
-__arguments__
+The injected abilities are provided by the `abilityClass` parameter, which is expected to be a class. The function takes the following parameters:
 
-* abilityClass *(function)*: the class will become to abilitiable.
-* coreMethod *(string|arrayOf string)*: optional must have coreMethod(s).
+**arguments**
+
+* `abilityClass` *(function)*: the class that provides the abilities to be injected
+* `coreMethod` *(string|arrayOf string)*: optional must have coreMethod(s).
+  * a string or an array of strings that represent core methods of the abilityClass.
+  * And if one or more of these methods are present in the target class, the ability will not be injected.
   * **note**: `@` prefix means class/static method.
-* isGetClassFunction *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
+* `isGetClassFunction` *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
   to return the real `Ability Class` if true. defaults to false.
+  * Whether abilityClass should be invoked with aClass and aOptions to get the actual ability class.
 
-__return__
+
+**return**
 
 * *(function)*: a function which can inject the ability to any class directly.
 
+the function customAbility should be modified its name.
+function customAbility(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false): WithAbilityFn
+
+The exported function returns another function (`WithAbilityFn(targetClass, options?: {include?: string|string[], exclude?: string|string[], methods? : {[name: string]: Function}, , classMethods? : {[name: string]: Function}}): targetClass`) that takes two parameters:
+
 This custom ability injection function has two arguments: `function(class[, options])`
 
-* `class`: the class to be injected the ability.
-* `options` *(object)*: optional options
-  * `include`*(array|string)*: only these methods will be added to the class
+* `class`: the target class to be injected the ability.
+* `options` *(object)*: an optional options object that can contain the following properties:
+  * `include`*(array|string)*: only these methods will be added(injected) to the class
     * **note**: `@` prefix means class/static method.
-  * `exclude`*(array|string)*: these methods would not be added to the class
-    * **note**: the `coreMethod` could not be excluded. It's always added to the class.
+  * `exclude`*(array|string)*: these methods would not be added(injected) to the class
+    * **note**: the `coreMethod` could not be excluded. It's always added(injected) to the class.
     * **note**: `@` prefix means class/static method.
   * `methods`*(object)*: injected/hooked methods to the class
     * key: the method name to hook.
-    * value: the new method function, if original method is exists or not in replacedMethods:
+    * value: the new method function, if original method is exists:
       * use `this.super()` to call the original method.
       * `this.self` is the original `this` object.
   * `classMethods` *(object)*: hooked class methods to the class, it's the same usage as the `methods`.
-  * `replacedMethods` *(array)*: the method name in the array will be replaced the original
-    method directly.
 
 ## Specification
 
@@ -473,7 +519,7 @@ module.exports = (aClass)->
     # we need to emit event when object state changes.
     setObjectState: (value, emitted = true)->
       self= @self
-      @super.call(self, value)
+      this.super.call(self, value)
       self.emit value, self if emitted
       return
     ...
