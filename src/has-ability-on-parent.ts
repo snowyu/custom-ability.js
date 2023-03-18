@@ -1,6 +1,6 @@
-const getPrototypeOf = require('inherits-ex/lib/getPrototypeOf');
+import getPrototypeOf from 'inherits-ex/lib/getPrototypeOf';
 
-module.exports = function hasAbilityOnParent(aClass, aName) {
+export default function hasAbilityOnParent(aClass: Function, aName: string) {
   let result, vPrototype;
   result = false;
   if (aClass) {
