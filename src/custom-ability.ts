@@ -4,7 +4,7 @@ import extendFilter from 'util-ex/lib/extend';
 import injectMethods from 'util-ex/lib/injectMethods';
 import injectMethod from 'util-ex/lib/injectMethod';
 import defineProperty from 'util-ex/lib/defineProperty';
-import getNonEnumNames from 'util-ex/lib/get-non-enumerable-names';
+import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enumerable-names';
 import isInjectedOnParent from './injected-on-parent';
 
 /**
@@ -50,7 +50,7 @@ function injectMethodsFromNonEnum(aTargetClass, aObject, filter?: (name:string)=
 /**
  * The Ability Options
  */
-interface AbilityOptions {
+export interface AbilityOptions {
   /**
    * An optional list of method names to include.
    */
@@ -90,8 +90,7 @@ type AbilityFn = (targetClass: Function, options?: AbilityOptions) => Function;
  *                    The returned function injects the abilities into the target class and returns the modified class.
  */
 export function createAbilityInjector(abilityClass: Function, isGetClassFunc?: boolean): AbilityFn;
-export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string, isGetClassFunc?: boolean): AbilityFn;
-export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string[], isGetClassFunc?: boolean): AbilityFn;
+export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string|string[], isGetClassFunc?: boolean): AbilityFn;
 /**
  * Creates a function that adds(injects) the ability to the target class based on the ability class.
  *
@@ -200,7 +199,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           const filterMethods = function (methods, isStatic?: boolean) {
             if (methods instanceof Object) {
               const vFilter = vGenFilter(isStatic);
-              for (let k in methods) {
+              for (const k in methods) {
                 if (!vFilter(k)) {
                   delete methods[k];
                 }
@@ -247,11 +246,10 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   };
 
   function filter(k, aIncludes, aExcludes, aIsStatic) {
-    var result;
     if (aIsStatic) {
       k = '@' + k;
     }
-    result = aIncludes.length;
+    let result = aIncludes.length;
     if (result) {
       result = aIncludes.indexOf(k) >= 0;
       if (!result && aExcludes.length) {
@@ -267,9 +265,9 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
 
   abilityFn.filter = filter;
 
+  /* // eslint-disable-next-line unused-imports/no-unused-vars
   function getAdditionalAbility(aClass, aName) {
-    var result;
-    result = [];
+    const result = [];
     while (aClass && aClass.prototype) {
       if (aClass.prototype.hasOwnProperty('$abilities') && !aClass.prototype.$abilities['$' + aName] && aClass.prototype.$abilities[aName]) {
         result.push(aClass);
@@ -278,14 +276,16 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
     }
     return result;
   };
+  */
 
   function injectAdditionalAbility(aClass, aName, filterMethods?) {
-    var $abilities, result, vAbility, vOptions;
+    let result;
     while (aClass && aClass.prototype) {
       if (aClass.prototype.hasOwnProperty('$abilities')) {
-        $abilities = aClass.prototype.$abilities;
+        const $abilities = aClass.prototype.$abilities;
+        let vAbility;
         if (!$abilities['$' + aName] && (vAbility = $abilities[aName])) {
-          vOptions = vAbility();
+          const vOptions = vAbility();
           result = aClass;
           if (vOptions != null) {
             if (filterMethods) {
