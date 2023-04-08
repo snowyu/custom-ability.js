@@ -1,3 +1,4 @@
-extension: ["ts"]
+extension: ["ts", "js"]
 spec: "test/**/*.spec.ts"
-require: "esbuild-register"
+# require: "test/babel-register.js"
+require: "ts-node/register"
