@@ -77,7 +77,7 @@ export interface AbilityOptions {
  * @returns {Function} - An injected target class that takes a class and adds the ability to it using the specified
  *                       options.
  */
-type AbilityFn = (targetClass: Function, options?: AbilityOptions) => Function;
+export type AbilityFn = (targetClass: Function, options?: AbilityOptions) => Function;
 
 /**
  * Creates a function that adds(injects) the ability to the target class based on the ability class.
