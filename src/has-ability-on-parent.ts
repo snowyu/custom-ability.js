@@ -1,6 +1,6 @@
 import getPrototypeOf from 'inherits-ex/lib/getPrototypeOf';
 
-export default function hasAbilityOnParent(aClass: Function, aName: string) {
+export function hasAbilityOnParent(aClass: Function, aName: string) {
   let result, vPrototype;
   result = false;
   if (aClass) {
@@ -16,3 +16,4 @@ export default function hasAbilityOnParent(aClass: Function, aName: string) {
   return result;
 };
 
+export default hasAbilityOnParent
