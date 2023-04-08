@@ -1,6 +1,6 @@
 {
   "name": "custom-ability",
-  "version": "1.6.2",
+  "version": "2.0.0-alpha.0",
   "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
   "homepage": "https://github.com/snowyu/custom-ability.js",
   "main": "./lib/index.js",
@@ -28,7 +28,7 @@
     "lint": "npx eslint --config .eslintrc.yml src",
     "lint.fix": "npm run lint -- --fix",
     "release": "npm run clean && npm run build && npx standard-version",
-    "release.alpha": "npx standard-version --prerelease alpha",
+    "release.alpha": "npm run release -- --prerelease alpha",
     "test": "mocha"
   },
   "engines": {
