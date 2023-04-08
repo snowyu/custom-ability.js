@@ -4,6 +4,7 @@
   "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
   "homepage": "https://github.com/snowyu/custom-ability.js",
   "main": "./lib/index.js",
+  "module": "./lib/esm/index.js",
   "files": [
     "README.md",
     "LICENSE-MIT",
@@ -13,16 +14,14 @@
     "lib"
   ],
   "scripts": {
-    "build": "npm run build.cjs && npm run build.mjs && npm run build.ts.d",
-    "build.cjs": "babel src --extensions '.ts' --config-file ./.babelrc --out-dir lib",
-    "build.mjs": "babel src --extensions '.ts' --config-file ./.babelrc-esm --out-dir lib/esm",
+    "build": "npm run build.ts && npm run doc.md",
     "build.ts": "npm run build.ts.cjs && npm run build.ts.mjs",
     "build.ts.d": "tsc --declaration --emitDeclarationOnly --outDir lib",
     "build.ts.cjs": "tsc --module commonjs -outDir lib",
     "build.ts.mjs": "tsc --moduleResolution nodenext --module es2022 -outDir lib/esm",
-    "clean": "rm -fr web docs types lib",
+    "clean": "rm -fr web docs lib",
     "clean.doc": "rm -fr web docs",
-    "clean.ts": "rm -fr types",
+    "clean.ts": "rm -fr lib/*.d.ts",
     "clean.lib": "rm -fr lib",
     "doc": "typedoc --plugin none --out web ./src",
     "doc.md": "typedoc --plugin typedoc-plugin-markdown --out docs ./src",
@@ -36,17 +35,11 @@
     "node": ">=12"
   },
   "dependencies": {
-    "inherits-ex": "^2.1.0-alpha.2",
-    "util-ex": "^2.0.0-alpha.0"
+    "inherits-ex": "^2.1.0-alpha.3",
+    "util-ex": "^2.0.0-alpha.1"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.38.4",
-    "@babel/cli": "^7.21.0",
-    "@babel/core": "^7.21.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.21.2",
-    "@babel/preset-env": "^7.21.4",
-    "@babel/preset-typescript": "^7.21.4",
-    "@babel/register": "^7.21.0",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
@@ -59,6 +52,7 @@
     "mocha": "~10.2.0",
     "sinon": "~15.0.3",
     "sinon-chai": "~3.7.0",
+    "ts-node": "^10.9.1",
     "typedoc": "^0.23.28",
     "typedoc-plugin-markdown": "^3.14.0",
     "typescript": "^5.0.4"
