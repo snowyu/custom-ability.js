@@ -590,7 +590,7 @@ describe('customAbility', function() {
     Mid.prototype.should.have.ownProperty('additional');
     return Mid.prototype.should.have.ownProperty('iok');
   });
-  return describe('use the injectMethods(AOP) to hook', function() {
+  describe('use the injectMethods(AOP) to hook', function() {
     var OneAbility, oneTestable;
     OneAbility = (function() {
       function OneAbility() {}

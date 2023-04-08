@@ -5,8 +5,9 @@ const should = chai.should();
 import { assert } from 'chai';
 chai.use(sinonChai);
 import path from 'path';
-import inherits from 'inherits-ex/lib/inherits';
-import defineProperty from 'util-ex/lib/defineProperty';
+// import inherits from 'inherits-ex/lib/inherits';
+import {inherits, defineProperty} from 'inherits-ex'
+// import defineProperty from 'inherits-ex/lib/defineProperty';
 import {createAbilityInjector as customAbility} from '../src/custom-ability';
 
 var setImmediate = setImmediate || process.nextTick;
@@ -14,7 +15,7 @@ var setImmediate = setImmediate || process.nextTick;
 function all_stub_reset(obj) {
   for (let k in obj) {
     const v = obj[k];
-    v.resetHistory();
+    if (v && v.resetHistory) v.resetHistory();
   }
 }
 
