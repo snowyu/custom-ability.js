@@ -1,6 +1,7 @@
 import hasAbilityOnParent from './has-ability-on-parent';
 
-export default function injectedOnParent(aClass: Function, aName: string) {
-  return hasAbilityOnParent(aClass, '$' + aName);
-};
+export function injectedOnParent(aClass: Function, aName: string) {
+  return hasAbilityOnParent(aClass, '$' + aName)
+}
 
+export default injectedOnParent
