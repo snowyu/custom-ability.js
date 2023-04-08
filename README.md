@@ -183,6 +183,8 @@ module.exports = AbstractObject
 
 ## API
 
+Full API see the folder: [docs](docs/modules.md)
+
 This library provides a function customAbility that can inject the abilities of a "mixin" class onto another target class or object.
 
 Abilities can be defined as static or instance methods on the "mixin" class.
