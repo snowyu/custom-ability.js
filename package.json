@@ -1,8 +1,9 @@
 {
   "name": "custom-ability",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
   "homepage": "https://github.com/snowyu/custom-ability.js",
+  "source": "./src/index.ts",
   "main": "./lib/index.js",
   "module": "./lib/esm/index.js",
   "files": [
@@ -27,7 +28,7 @@
     "doc.md": "typedoc --plugin typedoc-plugin-markdown --out docs ./src",
     "lint": "npx eslint --config .eslintrc.yml src",
     "lint.fix": "npm run lint -- --fix",
-    "release": "npm run clean && npm run build && npx standard-version",
+    "release": "npm run clean && npm run build && git add docs && git ci -m 'docs: update API docs' && npx standard-version -s",
     "release.alpha": "npm run release -- --prerelease alpha",
     "test": "mocha"
   },
@@ -35,8 +36,8 @@
     "node": ">=12"
   },
   "dependencies": {
-    "inherits-ex": "^2.1.0-alpha.3",
-    "util-ex": "^2.0.0-alpha.1"
+    "inherits-ex": "^2.1.0-alpha.5",
+    "util-ex": "^2.0.0-alpha.3"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.38.4",
