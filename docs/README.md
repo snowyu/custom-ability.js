@@ -21,7 +21,7 @@ Sometimes we may feel that a class is too large, containing too many features or
 **Usage:**
 
 1. Define an ability class that contains the methods you want to inject into other classes.
-2. Use the customAbility function to create a new function that can inject the ability into target classes.
+2. Use the `createAbilityInjector` function to create an injector function that can inject the ability into target classes.
 3. Call the new function with the ability class and any optional parameters to inject the ability into a target class.
 
 ## Examples
@@ -113,15 +113,17 @@ my.free() // now destroy, print the 'destroy' here.
 
 More complicated example, you can see the [events-ex/src/eventable.coffee](https://github.com/snowyu/events-ex.js).
 
-## additional $abilities
+## Additional Abilities($abilities)
 
-Another type of injection is the "additional abilities" that can be injected using the methods and classMethods parameters. These additional methods are necessary when modifying existing methods of the target class to call the old/original method to make a certain ability work.
+Another type of injection is the "**Additional Abilities**" that can be injected using the methods and classMethods parameters. These additional methods are necessary when modifying existing methods of the target class to call the old/original method to make a certain ability work.
 
 The injected methods are encapsulated in a closure. And the passed `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
 
+**Note**: The methods must be non-enumerable members of the target class(prototype).
+
 In order to make certain ability to work, you need to modify some methods
 of the class which could call the old(original) method. this time we need
-the "additional abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
+the "Additional Abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
 We need to send a notification event when the state of the object changes(life cycle).
 So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
 should be:
@@ -185,6 +187,8 @@ module.exports = AbstractObject
 
 ## API
 
+Full API see the folder: [docs](docs/modules.md)
+
 This library provides a function customAbility that can inject the abilities of a "mixin" class onto another target class or object.
 
 Abilities can be defined as static or instance methods on the "mixin" class.
@@ -234,6 +238,13 @@ This custom ability injection function has two arguments: `function(class[, opti
   * `classMethods` *(object)*: hooked class methods to the class, it's the same usage as the `methods`.
 
 ## Specification
+
+### V2
+
+* Transpile to ESM Format in lib/esm folder
+* Export all helper functions on index.js
+* TypeScript supports
+* NodeJS >= 12
 
 ### V1.6.2
 

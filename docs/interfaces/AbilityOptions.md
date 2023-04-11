@@ -23,7 +23,7 @@ An optional object mapping method names to static functions to be added to the t
 
 #### Defined in
 
-[custom-ability.ts:69](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L69)
+[custom-ability.ts:69](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L69)
 
 ___
 
@@ -35,7 +35,7 @@ An optional list of method names to exclude.
 
 #### Defined in
 
-[custom-ability.ts:61](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L61)
+[custom-ability.ts:61](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L61)
 
 ___
 
@@ -47,7 +47,7 @@ An optional list of method names to include.
 
 #### Defined in
 
-[custom-ability.ts:57](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L57)
+[custom-ability.ts:57](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L57)
 
 ___
 
@@ -59,4 +59,4 @@ An optional object mapping method names to functions to be added to the target c
 
 #### Defined in
 
-[custom-ability.ts:65](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L65)
+[custom-ability.ts:65](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L65)

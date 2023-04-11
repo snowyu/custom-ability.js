@@ -57,7 +57,7 @@ A function that adds(injects) the ability of a specified ability class to a targ
 
 #### Defined in
 
-[custom-ability.ts:80](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L80)
+[custom-ability.ts:80](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L80)
 
 ## Functions
 
@@ -84,7 +84,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:92](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L92)
+[custom-ability.ts:92](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L92)
 
 ▸ **createAbilityInjector**(`abilityClass`, `aCoreMethod?`, `isGetClassFunc?`): [`AbilityFn`](modules.md#abilityfn)
 
@@ -108,7 +108,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:93](https://github.com/snowyu/custom-ability.js/blob/c545270/src/custom-ability.ts#L93)
+[custom-ability.ts:93](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/custom-ability.ts#L93)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/c545270/src/has-ability-on-parent.ts#L3)
+[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/has-ability-on-parent.ts#L3)
 
 ___
 
@@ -150,7 +150,7 @@ ___
 
 #### Defined in
 
-[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/c545270/src/injected-on-parent.ts#L3)
+[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/injected-on-parent.ts#L3)
 
 ___
 
@@ -172,4 +172,4 @@ ___
 
 #### Defined in
 
-[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/c545270/src/require.ts#L9)
+[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/49a0f32/src/require.ts#L9)
