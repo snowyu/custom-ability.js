@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.2](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.1...v2.0.0-alpha.2) (2023-04-18)
+
+
+### Features
+
+* can inject all non-enumerable members on Ability class now ([63f01bd](https://github.com/snowyu/custom-ability.js/commit/63f01bdda4d8330cc5d28946d1b5cdcbe771e6f2))
+
+
+### Bug Fixes
+
+* should ignore the getter properties ([d6168ad](https://github.com/snowyu/custom-ability.js/commit/d6168ad8b3ac0817bd5dcf8f70b6a5f8e9508018))
+
 ## [2.0.0-alpha.1](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.0...v2.0.0-alpha.1) (2023-04-11)
 
 ## [2.0.0-alpha.0](https://github.com/snowyu/custom-ability.js/compare/v1.6.2...v2.0.0-alpha.0) (2023-04-08)
