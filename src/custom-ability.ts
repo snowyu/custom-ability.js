@@ -8,44 +8,54 @@ import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enum
 import isInjectedOnParent from './injected-on-parent';
 
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
+const skipStaticNames = ['name', 'arguments', 'prototype', 'super_', '__super__', '__proto__']
+const skipProtoNames = ['constructor', '__proto__']
+
 /**
- * Inject methods from NonEnum members of the aObject
+ * Inject non-enumerable members of the aObject into aTargetClass
  *
  * @internal
  * @param aTargetClass the target class
- * @param aObject the NonEnum methods of the object will be injected into aTargetClass
- * @param filter
- * @param isStatic Whether the injected methods on the aObject is static
- * @returns already injected method name list
+ * @param aObject the non-enumerable members of the object will be injected into aTargetClass
+ * @param filter  It'll be injected only when filter callback function return true, if exists
+ * @param isStatic Whether is static members
+ * @returns already injected members name list
  */
-function injectMethodsFromNonEnum(aTargetClass, aObject, filter?: (name:string)=>boolean, isStatic?: boolean) {
+function injectMembersFromNonEnum(aTargetClass, aObject, filter?: (name:string)=>boolean, isStatic?: boolean) {
   const nonEnumNames = getNonEnumNames(aObject);
   const result = [];
   nonEnumNames.forEach(function(name: string) {
-    let v, vName: string;
+    const vSkipNames = isStatic ? skipStaticNames : skipProtoNames
+    if (vSkipNames.includes(name)) {return}
+
     const desc = getOwnPropertyDescriptor(aObject, name)
-    if ((isStatic || name !== 'constructor') && !desc.get && isFunction(v = aObject[name])) {
-      const is$ = name[0] === '$';
-      // get rid of the first char '$'
-      if (is$) {
-        name = name.substring(1);
-      }
-      vName = isStatic ? '@' + name : name;
-      if (!filter || filter(vName)) {
-        if (isFunction(aTargetClass[name])) {
-          injectMethod(aTargetClass, name, v);
-        } else if (aTargetClass[name] != null) {
-          throw new TypeError('the same non-null name is not function:' + name);
-        } else {
-          if (is$ && aObject[name]) {
-            v = aObject[name];
-          }
-          aTargetClass[name] = v;
+    const v = desc.value
+    const isFn = isFunction(v)
+    const is$ = name[0] === '$';
+    // get rid of the first char '$'
+    if (is$) {
+      name = name.substring(1);
+    }
+    const vName = isStatic ? '@' + name : name;
+    if (filter && !filter(vName)) {return}
+    if (desc.get === undefined && desc.set === undefined && v === undefined) {return}
+
+    if (!desc.get && isFn) {
+      if (isFunction(aTargetClass[name])) {
+        injectMethod(aTargetClass, name, v);
+        result.push(vName);
+        return;
+      } else if (aTargetClass[name] != null) {
+        throw new TypeError('the same non-null name is not function:' + name);
+      } else {
+        if (is$ && aObject[name]) {
+          desc.value = aObject[name];
         }
-        result.push(name);
       }
     }
-  });
+    defineProperty(aTargetClass, name, undefined, desc)
+    result.push(name);
+});
   return result;
 };
 
@@ -149,7 +159,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           if (vName) {
             vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName);
           }
-          vExcludes = injectMethodsFromNonEnum(aClass, AbilityClass, null, true);
+          vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, null, true);
           extendFilter(aClass, AbilityClass, function(k) {
             return !(vExcludes.indexOf(k) >= 0);
           });
@@ -157,7 +167,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
             aClassPrototype = vAdditionalAbilityInjected.prototype;
           }
           if (!vInjectedOnParent) {
-            vExcludes = injectMethodsFromNonEnum(aClassPrototype, AbilityClass.prototype);
+            vExcludes = injectMembersFromNonEnum(aClassPrototype, AbilityClass.prototype);
             extendFilter(aClassPrototype, AbilityClass.prototype, function(k) {
               return !(vExcludes.indexOf(k) >= 0);
             });
@@ -193,8 +203,8 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
             };
           };
 
-          let vAbilities = injectMethodsFromNonEnum(aClass, AbilityClass, vGenFilter(true), true);
-          vAbilities = vAbilities.concat(injectMethodsFromNonEnum(aClass.prototype, AbilityClass.prototype, vGenFilter()));
+          let vAbilities = injectMembersFromNonEnum(aClass, AbilityClass, vGenFilter(true), true);
+          vAbilities = vAbilities.concat(injectMembersFromNonEnum(aClass.prototype, AbilityClass.prototype, vGenFilter()));
           vExcludes = vExcludes.concat(vAbilities);
           vAbilities = undefined;
 

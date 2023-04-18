@@ -1,4 +1,4 @@
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 const should = chai.should();
@@ -87,6 +87,7 @@ describe('customAbility with es6', function() {
       static additionalClassMethod: () => void;
       static coreAbilityClassMethod(){};
       static get getter(){return 1}
+      static field = 1
 
       get getter(){return 1}
       coreAbilityMethod(){};
@@ -102,8 +103,13 @@ describe('customAbility with es6', function() {
     // inject the static and instance methods to the MyClass.
     addFeatureTo(MyClass);
     MyClass.should.have.ownProperty('coreAbilityClassMethod')
-    MyClass.should.not.have.ownProperty('getter')
-    MyClass.prototype.should.not.have.ownProperty('getter')
+    let prop = Object.getOwnPropertyDescriptor(MyFeature, 'getter')
+    prop!.get!.should.be.a('function');
+    Object.getOwnPropertyDescriptor(MyClass, 'getter')!.should.have.ownProperty('get', prop!.get)
+    prop = Object.getOwnPropertyDescriptor(MyFeature.prototype, 'getter')
+    Object.getOwnPropertyDescriptor(MyClass.prototype, 'getter')!.should.have.ownProperty('get', prop!.get)
+    prop = Object.getOwnPropertyDescriptor(MyFeature, 'field')
+    Object.getOwnPropertyDescriptor(MyClass, 'field')!.should.have.ownProperty('value', 1)
   });
   it('could use getAbilityClass', function() {
     var My, getAbilityClass, result, testable1;
