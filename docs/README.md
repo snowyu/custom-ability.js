@@ -24,6 +24,45 @@ Sometimes we may feel that a class is too large, containing too many features or
 2. Use the `createAbilityInjector` function to create an injector function that can inject the ability into target classes.
 3. Call the new function with the ability class and any optional parameters to inject the ability into a target class.
 
+**Note**: The all non-enumerable members on the Ability class will be injected into the target class.
+
+**Replace Exists Methods**
+
+if you wanna “replace” and call the methods that already exist in a class, you can add the same method name prefixed with "`$`" on the ability class, add call the original method in this way:
+
+```javascript
+const makeAbility = require('custom-ability')
+class Feature {
+ // the same method name prefixed with "`$`"
+ $init() {
+   // the original method in target class
+   const Super = this.super
+   const that = this.self || this
+   if (Super) {
+     if (Super.apply(that, arguments) === 'ok') return
+   }
+   that._init.apply(that, arguments)
+ }
+ _init() {console.log('feature init')}
+}
+// if the target class has no the init method, it(the enumerable method) will be injected
+Feature.prototype.init = function() {this._init.apply(this, arguments)}
+const addFeatureTo = makeAbility(Feature)
+
+class My {
+}
+addFeatureTo(My)
+expect(My.prototype.init).toStrictEqual(Feature.prototype.init)
+
+class My2 {
+  init() {console.log('My2 init')}
+}
+
+addFeatureTo(My2)
+expect(My2.prototype.init).toStrictEqual(Feature.prototype.$init)
+
+```
+
 ## Examples
 
 Suppose we wanna add the RefCount ability to any class directly.
@@ -157,9 +196,6 @@ module.exports = function (aOptions){
   // more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
 }
 ```
-
-**TODO: need to more explain:**
-The original `eventable('events-ex/eventable')` is no useful for AbstractObject.
 
 But we wanna the original `eventable('events-ex/eventable')` knows the changes
 and use it automatically.
