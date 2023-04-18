@@ -82,6 +82,29 @@ describe('customAbility with es6', function() {
     MyClass.should.have.ownProperty('coreAbilityClassMethod')
 
   });
+  it('should ignore getter attribute', function() {
+    class MyFeature {
+      static additionalClassMethod: () => void;
+      static coreAbilityClassMethod(){};
+      static get getter(){return 1}
+
+      get getter(){return 1}
+      coreAbilityMethod(){};
+      additionalAbilityMethod(){};
+    }
+    MyFeature.additionalClassMethod = function() {}
+
+    const addFeatureTo = customAbility(MyFeature, ['coreAbilityMethod', '@coreAbilityClassMethod']);
+
+    class MyClass {
+      someMethod() {}
+    }
+    // inject the static and instance methods to the MyClass.
+    addFeatureTo(MyClass);
+    MyClass.should.have.ownProperty('coreAbilityClassMethod')
+    MyClass.should.not.have.ownProperty('getter')
+    MyClass.prototype.should.not.have.ownProperty('getter')
+  });
   it('could use getAbilityClass', function() {
     var My, getAbilityClass, result, testable1;
     My = class My {};

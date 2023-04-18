@@ -7,6 +7,7 @@ import defineProperty from 'util-ex/lib/defineProperty';
 import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enumerable-names';
 import isInjectedOnParent from './injected-on-parent';
 
+const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
 /**
  * Inject methods from NonEnum members of the aObject
  *
@@ -22,7 +23,8 @@ function injectMethodsFromNonEnum(aTargetClass, aObject, filter?: (name:string)=
   const result = [];
   nonEnumNames.forEach(function(name: string) {
     let v, vName: string;
-    if ((isStatic || name !== 'constructor') && isFunction(v = aObject[name])) {
+    const desc = getOwnPropertyDescriptor(aObject, name)
+    if ((isStatic || name !== 'constructor') && !desc.get && isFunction(v = aObject[name])) {
       const is$ = name[0] === '$';
       // get rid of the first char '$'
       if (is$) {
