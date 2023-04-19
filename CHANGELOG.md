@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.3](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-04-19)
+
+
+### Bug Fixes
+
+* should not overwrite with an empty function ([b404bbf](https://github.com/snowyu/custom-ability.js/commit/b404bbff315e9999f7fc6ad29f932f0810347362))
+
 ## [2.0.0-alpha.2](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.1...v2.0.0-alpha.2) (2023-04-18)
 
 
