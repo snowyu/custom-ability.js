@@ -5,6 +5,8 @@ import injectMethods from 'util-ex/lib/injectMethods';
 import injectMethod from 'util-ex/lib/injectMethod';
 import defineProperty from 'util-ex/lib/defineProperty';
 import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enumerable-names';
+import { isEmptyFunction } from 'inherits-ex';
+
 import isInjectedOnParent from './injected-on-parent';
 
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
@@ -41,11 +43,16 @@ function injectMembersFromNonEnum(aTargetClass, aObject, filter?: (name:string)=
     if (desc.get === undefined && desc.set === undefined && v === undefined) {return}
 
     if (!desc.get && isFn) {
-      if (isFunction(aTargetClass[name])) {
-        injectMethod(aTargetClass, name, v);
-        result.push(vName);
-        return;
-      } else if (aTargetClass[name] != null) {
+      const vTargetFn = aTargetClass[name]
+      if (isFunction(vTargetFn)) {
+        if (!isEmptyFunction(vTargetFn)) {
+          if (!isEmptyFunction(v)) {
+            injectMethod(aTargetClass, name, v);
+            result.push(vName);
+          }
+          return;
+        }
+      } else if (vTargetFn != null) {
         throw new TypeError('the same non-null name is not function:' + name);
       } else {
         if (is$ && aObject[name]) {

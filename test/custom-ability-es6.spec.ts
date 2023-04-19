@@ -7,7 +7,6 @@ chai.use(sinonChai);
 import path from 'path';
 // import inherits from 'inherits-ex/lib/inherits';
 import {inherits, defineProperty} from 'inherits-ex'
-// import defineProperty from 'inherits-ex/lib/defineProperty';
 import {createAbilityInjector as customAbility} from '../src/custom-ability';
 
 var setImmediate = setImmediate || process.nextTick;
@@ -82,7 +81,7 @@ describe('customAbility with es6', function() {
     MyClass.should.have.ownProperty('coreAbilityClassMethod')
 
   });
-  it('should ignore getter attribute', function() {
+  it('should add non-enumerable attributes', function() {
     class MyFeature {
       static additionalClassMethod: () => void;
       static coreAbilityClassMethod(){};
@@ -110,6 +109,28 @@ describe('customAbility with es6', function() {
     Object.getOwnPropertyDescriptor(MyClass.prototype, 'getter')!.should.have.ownProperty('get', prop!.get)
     prop = Object.getOwnPropertyDescriptor(MyFeature, 'field')
     Object.getOwnPropertyDescriptor(MyClass, 'field')!.should.have.ownProperty('value', 1)
+  });
+  it('should not overwrite an empty function', function() {
+    class MyFeature {
+      static additionalClassMethod: () => void;
+      static coreAbilityClassMethod(){};
+      static emptyMethod(){}
+
+      coreAbilityMethod(){};
+      additionalAbilityMethod(){};
+    }
+    MyFeature.additionalClassMethod = function() {}
+    const addFeatureTo = customAbility(MyFeature, ['coreAbilityMethod', '@coreAbilityClassMethod']);
+
+    function emptyMethod(){console.log("MyClass")}
+    class MyClass {
+      declare static emptyMethod: Function
+      someMethod() {}
+    }
+    defineProperty(MyClass, 'emptyMethod', emptyMethod)
+    // inject the static and instance methods to the MyClass.
+    addFeatureTo(MyClass);
+    MyClass.should.have.ownProperty('emptyMethod', emptyMethod)
   });
   it('could use getAbilityClass', function() {
     var My, getAbilityClass, result, testable1;
