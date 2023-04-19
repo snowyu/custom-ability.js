@@ -24,7 +24,7 @@ Sometimes we may feel that a class is too large, containing too many features or
 2. Use the `createAbilityInjector` function to create an injector function that can inject the ability into target classes.
 3. Call the new function with the ability class and any optional parameters to inject the ability into a target class.
 
-**Note**: The all non-enumerable members on the Ability class will be injected into the target class.
+**Note**: The all **non-enumerable members** on the Ability class will be injected into the target class.
 
 **Replace Exists Methods**
 
@@ -158,7 +158,7 @@ Another type of injection is the "**Additional Abilities**" that can be injected
 
 The injected methods are encapsulated in a closure. And the passed `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
 
-**Note**: The methods must be non-enumerable members of the target class(prototype).
+**Note**: The methods must be **non-enumerable members** of the target class(prototype).
 
 In order to make certain ability to work, you need to modify some methods
 of the class which could call the old(original) method. this time we need
