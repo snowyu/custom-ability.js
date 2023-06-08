@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 const should = chai.should();
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 chai.use(sinonChai);
 import path from 'path';
 import inherits from 'inherits-ex/lib/inherits';
@@ -416,13 +416,14 @@ describe('customAbility', function() {
     My.prototype.should.have.ownProperty('additional');
     myAbilityCheck(My);
   });
-  it('should use inherited additional abilities', function() {
-    var My, Root, my, myOpts, opt, overMy, overRoot, rootOpts;
-    overRoot = sinon.spy();
-    overMy = sinon.spy(function() {
-      return My.__super__.over.apply(this, arguments);
+  it('should not duplicate inject additional abilities on base class', function() {
+    const overRoot = sinon.spy(function(){
+      expect(this).not.ownProperty('self')
     });
-    rootOpts = function() {
+    const overMy = sinon.spy(function() {
+      return (My as any).__super__.over.apply(this, arguments);
+    });
+    function rootOpts() {
       return {
         methods: {
           root: function() {},
@@ -430,43 +431,86 @@ describe('customAbility', function() {
         }
       };
     };
-    myOpts = function() {
+    function myOpts() {
       return {
         methods: {
-          addtional: function() {},
+          additional: function() {},
           over: overMy
         }
       };
     };
-    Root = (function() {
-      function Root() {}
+    // function Root() {}
+    class Root {}
+    class My extends Root {}
 
-      Root.prototype.$abilities = {
-        MyAbility: rootOpts
-      };
+    Root.prototype['$abilities'] = {
+      MyAbility: rootOpts
+    };
 
-      return Root;
+    // function My() {}
 
-    })();
-    My = (function() {
-      function My() {}
+    // inherits(My, Root);
 
-      inherits(My, Root);
+    My.prototype['$abilities'] = {
+      MyAbility: myOpts
+    };
 
-      My.prototype.$abilities = {
-        MyAbility: myOpts
-      };
-
-      return My;
-
-    })();
-    opt = {};
+    const opt = {};
     testable(My, opt);
-    My.prototype.should.have.ownProperty('addtional');
+
+    // test inject duplication
+    // function My1() {}
+    // inherits(My1, Root);
+    class My1 extends Root {}
+    console.log('TCL:: ~ file: custom-ability.spec.ts:470 ~ it.only ~ Root:', Root.prototype);
+    testable(My1, opt);
+    const my:any = new My1;
+    console.log('TCL:: ~ file: custom-ability.spec.ts:473 ~ it.only ~ my:', my);
+    my.over(3, 1, 2);
+    overRoot.should.have.been.calledWith(3, 1, 2);
+  });
+  it('should use inherited additional abilities', function() {
+    const overRoot = sinon.spy();
+    const overMy = sinon.spy(function() {
+      return (My as any).__super__.over.apply(this, arguments);
+    });
+    function rootOpts() {
+      return {
+        methods: {
+          root: function() {},
+          over: overRoot
+        }
+      };
+    };
+    function myOpts() {
+      return {
+        methods: {
+          additional: function() {},
+          over: overMy
+        }
+      };
+    };
+    function Root() {}
+
+    Root.prototype.$abilities = {
+      MyAbility: rootOpts
+    };
+
+    function My() {}
+
+    inherits(My, Root);
+
+    My.prototype.$abilities = {
+      MyAbility: myOpts
+    };
+
+    const opt = {};
+    testable(My, opt);
+    My.prototype.should.have.ownProperty('additional');
     My.prototype.should.have.property('root');
     My.prototype.should.have.ownProperty('over');
     myAbilityCheck(My);
-    my = new My;
+    let my = new My;
     my.over(1, 2, 3);
     overMy.should.have.been.calledOnce;
     overMy.should.have.been.calledWith(1, 2, 3);
@@ -588,7 +632,7 @@ describe('customAbility', function() {
     Root.prototype.should.have.ownProperty('additional');
     Root.prototype.should.have.ownProperty('two');
     Mid.prototype.should.have.ownProperty('additional');
-    return Mid.prototype.should.have.ownProperty('iok');
+    Mid.prototype.should.have.ownProperty('iok');
   });
   describe('use the injectMethods(AOP) to hook', function() {
     var OneAbility, oneTestable;
@@ -664,9 +708,9 @@ describe('customAbility', function() {
       OneAbility.prototype.$init.should.be.calledOnce;
       OneAbility.prototype.$init.should.be.calledWith(123);
       t = OneAbility.prototype.$init.thisValues[0];
-      return t.should.be.equal(a);
+      t.should.be.equal(a);
     });
-    return it('should ignore some injectMethod', function() {
+    it('should ignore some injectMethod', function() {
       var A, a, oldInit;
       oldInit = sinon.spy();
       A = (function() {
@@ -687,7 +731,7 @@ describe('customAbility', function() {
       a = new A(123);
       OneAbility.prototype.$init.should.not.be.called;
       oldInit.should.be.calledOnce;
-      return oldInit.should.be.calledWith(123);
+      oldInit.should.be.calledWith(123);
     });
   });
 });

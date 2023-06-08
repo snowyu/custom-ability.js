@@ -12,6 +12,9 @@ import isInjectedOnParent from './injected-on-parent';
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
 const skipStaticNames = ['name', 'arguments', 'prototype', 'super_', '__super__', '__proto__']
 const skipProtoNames = ['constructor', '__proto__']
+const abilitiesSym = '$abilities'
+
+export const AdditionalInjectionType = { inherited: 0, direct: 1}
 
 /**
  * Inject non-enumerable members of the aObject into aTargetClass
@@ -155,9 +158,9 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
         }
       }
       if (vName) {
-        $abilities = aClass.prototype.$abilities;
+        $abilities = aClass.prototype[abilitiesSym];
         vInjectedOnParent = isInjectedOnParent(aClass, vName);
-        if (!aClass.prototype.hasOwnProperty('$abilities')) {
+        if (!aClass.prototype.hasOwnProperty(abilitiesSym)) {
           $abilities = null;
         }
       }
@@ -248,12 +251,11 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           }
         }
         if (vName) {
-          if (aClassPrototype !== aClass.prototype) {
-            aClassPrototype = aClass.prototype;
-          }
-          if (!aClassPrototype.hasOwnProperty('$abilities')) {
+          if (aClassPrototype.hasOwnProperty(abilitiesSym)) {
+            $abilities = aClassPrototype[abilitiesSym];
+          } else {
             $abilities = {};
-            defineProperty(aClassPrototype, '$abilities', $abilities);
+            defineProperty(aClassPrototype, abilitiesSym, $abilities);
           }
           $abilities['$' + vName] = abilityFn;
         }
@@ -300,7 +302,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   function injectAdditionalAbility(aClass, aName, filterMethods?) {
     let result;
     while (aClass && aClass.prototype) {
-      if (aClass.prototype.hasOwnProperty('$abilities')) {
+      if (aClass.prototype.hasOwnProperty(abilitiesSym)) {
         const $abilities = aClass.prototype.$abilities;
         let vAbility;
         if (!$abilities['$' + aName] && (vAbility = $abilities[aName])) {
