@@ -5,7 +5,7 @@ import injectMethods from 'util-ex/lib/injectMethods';
 import injectMethod from 'util-ex/lib/injectMethod';
 import defineProperty from 'util-ex/lib/defineProperty';
 import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enumerable-names';
-import { isEmptyFunction } from 'inherits-ex';
+import { getParentClass, isEmptyFunction } from 'inherits-ex';
 
 import isInjectedOnParent from './injected-on-parent';
 
@@ -320,7 +320,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           }
         }
       }
-      aClass = aClass.super_;
+      aClass = getParentClass(aClass);
     }
     return result;
   };
