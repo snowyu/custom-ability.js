@@ -7,7 +7,7 @@ chai.use(sinonChai);
 import path from 'path';
 import inherits from 'inherits-ex/lib/inherits';
 import defineProperty from 'util-ex/lib/defineProperty';
-import {createAbilityInjector as customAbility} from '../src/custom-ability';
+import {abilitiesSym, createAbilityInjector as customAbility} from '../src/custom-ability';
 
 
 var setImmediate = setImmediate || process.nextTick;
@@ -404,7 +404,7 @@ describe('customAbility', function() {
     My = (function() {
       function My() {}
 
-      My.prototype.$abilities = {
+      My.prototype[abilitiesSym] = {
         MyAbility: testableOpts
       };
 
@@ -443,7 +443,7 @@ describe('customAbility', function() {
     class Root {}
     class My extends Root {}
 
-    Root.prototype['$abilities'] = {
+    Root.prototype[abilitiesSym] = {
       MyAbility: rootOpts
     };
 
@@ -451,7 +451,7 @@ describe('customAbility', function() {
 
     // inherits(My, Root);
 
-    My.prototype['$abilities'] = {
+    My.prototype[abilitiesSym] = {
       MyAbility: myOpts
     };
 
@@ -490,7 +490,7 @@ describe('customAbility', function() {
     };
     function Root() {}
 
-    Root.prototype.$abilities = {
+    Root.prototype[abilitiesSym] = {
       MyAbility: rootOpts
     };
 
@@ -498,7 +498,7 @@ describe('customAbility', function() {
 
     inherits(My, Root);
 
-    My.prototype.$abilities = {
+    My.prototype[abilitiesSym] = {
       MyAbility: myOpts
     };
 
@@ -529,7 +529,7 @@ describe('customAbility', function() {
     Root = (function() {
       function Root() {}
 
-      Root.prototype.$abilities = {
+      Root.prototype[abilitiesSym] = {
         MyAbility: rootOpts
       };
 
@@ -567,7 +567,7 @@ describe('customAbility', function() {
     Root = (function() {
       function Root() {}
 
-      Root.prototype.$abilities = {
+      Root.prototype[abilitiesSym] = {
         MyAbility: function() {
           return {
             methods: {
@@ -586,7 +586,7 @@ describe('customAbility', function() {
 
       inherits(Mid, Root);
 
-      Mid.prototype.$abilities = {
+      Mid.prototype[abilitiesSym] = {
         MyAbility: function() {
           return {
             methods: {
