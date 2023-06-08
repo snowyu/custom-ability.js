@@ -462,10 +462,8 @@ describe('customAbility', function() {
     // function My1() {}
     // inherits(My1, Root);
     class My1 extends Root {}
-    console.log('TCL:: ~ file: custom-ability.spec.ts:470 ~ it.only ~ Root:', Root.prototype);
     testable(My1, opt);
     const my:any = new My1;
-    console.log('TCL:: ~ file: custom-ability.spec.ts:473 ~ it.only ~ my:', my);
     my.over(3, 1, 2);
     overRoot.should.have.been.calledWith(3, 1, 2);
   });
