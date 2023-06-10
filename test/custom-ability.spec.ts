@@ -7,7 +7,7 @@ chai.use(sinonChai);
 import path from 'path';
 import inherits from 'inherits-ex/lib/inherits';
 import defineProperty from 'util-ex/lib/defineProperty';
-import {abilitiesSym, createAbilityInjector as customAbility} from '../src/custom-ability';
+import {abilitiesSym, createAbilityInjector} from '../src/custom-ability';
 
 
 var setImmediate = setImmediate || process.nextTick;
@@ -35,7 +35,7 @@ describe('customAbility', function() {
   MyAbility.ctwo = sinon.spy();
 
 
-  const testable = customAbility(MyAbility, 'emit');
+  const testable = createAbilityInjector(MyAbility, 'emit');
 
   beforeEach(function() {
     all_stub_reset(MyAbility);
@@ -68,20 +68,20 @@ describe('customAbility', function() {
     getAbilityClass = function(aClass) {
       return MyAbility;
     };
-    testable1 = customAbility(getAbilityClass, true);
+    testable1 = createAbilityInjector(getAbilityClass, true);
     result = testable1(My);
     result.should.be.equal(My);
     return myAbilityCheck(result);
   });
   it('could get AbilityClass when no aClass passing', function() {
     let My, testable1;
-    testable1 = customAbility(MyAbility);
+    testable1 = createAbilityInjector(MyAbility);
     My = testable1();
     return My.should.be.equal(MyAbility);
   });
   it('could no inject if have already static coreMethod', function() {
     var My, testable1;
-    testable1 = customAbility(MyAbility, '@cone');
+    testable1 = createAbilityInjector(MyAbility, '@cone');
     My = (function() {
       function My() {}
 
@@ -95,7 +95,7 @@ describe('customAbility', function() {
   });
   it('could have no coreMethod', function() {
     var My, Root, k, result, results, testable1;
-    testable1 = customAbility(MyAbility);
+    testable1 = createAbilityInjector(MyAbility);
     Root = (function() {
       function Root() {}
 
@@ -114,15 +114,16 @@ describe('customAbility', function() {
     result.should.be.equal(Root);
     myAbilityCheck(result);
     result = testable1(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root); // already injected on Root
     for (k in MyAbility) {
       should.exist(result[k], k);
     }
-    results = [];
+    // results = [];
     for (k in MyAbility.prototype) {
-      results.push(result.prototype.should.not.have.ownProperty(k));
+      My.prototype.should.have.property(k);
+      My.prototype.should.not.have.ownProperty(k);
     }
-    return results;
+    // return results;
   });
   it('should add multi abilities on same class', function() {
     var My, OtherAbility, Root, k, ref, ref1, result, results, testable1, testable2, v;
@@ -136,8 +137,8 @@ describe('customAbility', function() {
       return OtherAbility;
 
     })();
-    testable1 = customAbility(MyAbility);
-    testable2 = customAbility(OtherAbility);
+    testable1 = createAbilityInjector(MyAbility);
+    testable2 = createAbilityInjector(OtherAbility);
     Root = (function() {
       function Root() {}
 
@@ -164,12 +165,13 @@ describe('customAbility', function() {
       v.should.be.equal(result.prototype[k]);
     }
     result = testable1(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root);
     for (k in MyAbility) {
       should.exist(result[k], k);
     }
     for (k in MyAbility.prototype) {
-      result.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.have.property(k);
     }
     result = testable2(Root);
     result.should.be.equal(Root);
@@ -183,15 +185,14 @@ describe('customAbility', function() {
       v.should.be.equal(result.prototype[k]);
     }
     result = testable2(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root);
     for (k in OtherAbility) {
       should.exist(result[k], k);
     }
-    results = [];
     for (k in OtherAbility.prototype) {
-      results.push(result.prototype.should.not.have.ownProperty(k));
+      My.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.have.property(k);
     }
-    return results;
   });
   it('should add methods and class methods to a class', function() {
     var My, k, ref, results, v;
@@ -215,7 +216,7 @@ describe('customAbility', function() {
       MyAbility["class"] = aClass;
       return MyAbility;
     };
-    testable1 = customAbility(fn, 'emit', true);
+    testable1 = createAbilityInjector(fn, 'emit', true);
     My = function() {};
     testable1(My).should.be.equal(My);
     for (k in MyAbility) {
@@ -252,7 +253,7 @@ describe('customAbility', function() {
 
       })();
     };
-    testable1 = customAbility(fn, 'emit', true);
+    testable1 = createAbilityInjector(fn, 'emit', true);
     My = function() {};
     testable1(My).should.be.equal(My);
     for (k in MyA) {
@@ -616,8 +617,8 @@ describe('customAbility', function() {
     for (k in MyAbility) {
       v = MyAbility[k];
       Mid.should.not.have.ownProperty(k);
-      Root.should.not.have.ownProperty(k);
-      A.should.have.ownProperty(k);
+      Root.should.have.ownProperty(k);
+      A.should.not.have.ownProperty(k);
       v.should.be.equal(A[k]);
     }
     ref = MyAbility.prototype;
@@ -658,7 +659,7 @@ describe('customAbility', function() {
       return OneAbility;
 
     })();
-    oneTestable = customAbility(OneAbility, 'emit');
+    oneTestable = createAbilityInjector(OneAbility, 'emit');
     beforeEach(function() {
       OneAbility.prototype.$init.resetHistory();
       all_stub_reset(OneAbility);

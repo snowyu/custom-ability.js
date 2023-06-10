@@ -12,9 +12,11 @@ import isInjectedOnParent from './injected-on-parent';
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
 const skipStaticNames = ['name', 'arguments', 'prototype', 'super_', '__super__', '__proto__']
 const skipProtoNames = ['constructor', '__proto__']
-const abilitiesSym = '$abilities'
 
-export const AdditionalInjectionType = { inherited: 0, direct: 1}
+export const abilitiesSym = '$abilities'
+export const abilitiesOptSym = '$abilitiesOpt'
+
+export const AdditionalInjectionMode = { inherited: 0, direct: 1}
 
 /**
  * Inject non-enumerable members of the aObject into aTargetClass
@@ -91,6 +93,21 @@ export interface AbilityOptions {
   classMethods?: Record<string, Function>
 }
 
+export interface AdditionalAbility {
+  id?: string; // the AdditionalAbilityOptions ID
+  mode?: number;    // the injection mode
+  getOpts: (options?: AbilityOptions) => AbilityOptions;
+}
+
+export interface AdditionalAbilities {
+  // the key is the target ability name
+  [key: string]: AdditionalAbility
+}
+
+export interface AbilityInjectorOptions {
+  depends: AdditionalAbilities;
+}
+
 /**
  * A function that adds(injects) the ability of a specified ability class to a target class.
  *
@@ -144,44 +161,50 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
     const vName = AbilityClass.name;
 
     if (aClass != null) {
-      let $abilities, vAdditionalAbilityInjected, vExcludes, vIncludes, vInjectedOnParent;
+      let $abilities, vAdditionalAbilityInjected;
 
-      let aClassPrototype = aClass.prototype;
+      let vClassPrototype = aClass.prototype;
       let vHasCoreMethod = isArray(aCoreMethod) ? aCoreMethod[0] : aCoreMethod as string;
 
       if (vHasCoreMethod) {
         if (vHasCoreMethod[0] !== '@') {
-          vHasCoreMethod = aClassPrototype.hasOwnProperty(vHasCoreMethod);
+          vHasCoreMethod = vClassPrototype.hasOwnProperty(vHasCoreMethod);
         } else {
           vHasCoreMethod = vHasCoreMethod.substring(1);
           vHasCoreMethod = aClass.hasOwnProperty(vHasCoreMethod);
         }
       }
       if (vName) {
+        const vInjectedOnParent = isInjectedOnParent(aClass, vName);
+        // return the injected class if it has already been injected on parent
+        if (vInjectedOnParent) {return vInjectedOnParent}
         $abilities = aClass.prototype[abilitiesSym];
-        vInjectedOnParent = isInjectedOnParent(aClass, vName);
         if (!aClass.prototype.hasOwnProperty(abilitiesSym)) {
           $abilities = null;
         }
+
+        vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName);
+        if (vAdditionalAbilityInjected) {
+          aClass = vAdditionalAbilityInjected
+          vClassPrototype = vAdditionalAbilityInjected.prototype;
+        }
       }
       if (!(vHasCoreMethod || ($abilities && $abilities['$' + vName]))) {
+        let vExcludes, vIncludes;
         if ((aOptions == null) || !(aOptions.include || aOptions.exclude)) {
-          if (vName) {
-            vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName);
-          }
+          // inject the static methods
           vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, null, true);
           extendFilter(aClass, AbilityClass, function(k) {
             return !(vExcludes.indexOf(k) >= 0);
           });
-          if (vAdditionalAbilityInjected) {
-            aClassPrototype = vAdditionalAbilityInjected.prototype;
-          }
-          if (!vInjectedOnParent) {
-            vExcludes = injectMembersFromNonEnum(aClassPrototype, AbilityClass.prototype);
-            extendFilter(aClassPrototype, AbilityClass.prototype, function(k) {
-              return !(vExcludes.indexOf(k) >= 0);
-            });
-          }
+
+          // inject the methods
+          vExcludes = injectMembersFromNonEnum(vClassPrototype, AbilityClass.prototype);
+
+          extendFilter(vClassPrototype, AbilityClass.prototype, function(k) {
+            return !(vExcludes.indexOf(k) >= 0);
+          });
+
         } else {
           vIncludes = aOptions.include;
           if (vIncludes) {
@@ -214,7 +237,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           };
 
           let vAbilities = injectMembersFromNonEnum(aClass, AbilityClass, vGenFilter(true), true);
-          vAbilities = vAbilities.concat(injectMembersFromNonEnum(aClass.prototype, AbilityClass.prototype, vGenFilter()));
+          vAbilities = vAbilities.concat(injectMembersFromNonEnum(vClassPrototype, AbilityClass.prototype, vGenFilter()));
           vExcludes = vExcludes.concat(vAbilities);
           vAbilities = undefined;
 
@@ -229,33 +252,33 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
             }
           };
 
-          if (vName) {
-            vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName, filterMethods);
-          }
-          extendFilter(aClass, AbilityClass, vGenFilter(true));
-          if (vAdditionalAbilityInjected) {
-            aClassPrototype = vAdditionalAbilityInjected.prototype;
-          }
-          if (!vInjectedOnParent) {
-            extendFilter(aClassPrototype, AbilityClass.prototype, vGenFilter());
-          }
+          // if (vName) {
+          //   vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName, filterMethods);
+          // }
+          extendFilter(vAdditionalAbilityInjected, AbilityClass, vGenFilter(true));
+          // if (vAdditionalAbilityInjected) {
+          //   vClassPrototype = vAdditionalAbilityInjected.prototype;
+          // }
+
+          extendFilter(vClassPrototype, AbilityClass.prototype, vGenFilter());
+
           filterMethods(aOptions.methods);
           filterMethods(aOptions.classMethods);
         }
         if (aOptions != null) {
-          if (!vInjectedOnParent && aOptions.methods instanceof Object) {
-            injectMethods(aClassPrototype, aOptions.methods, aOptions);
+          if (aOptions.methods instanceof Object) {
+            injectMethods(vClassPrototype, aOptions.methods, aOptions);
           }
           if (aOptions.classMethods instanceof Object) {
             injectMethods(aClass, aOptions.classMethods, aOptions);
           }
         }
         if (vName) {
-          if (aClassPrototype.hasOwnProperty(abilitiesSym)) {
-            $abilities = aClassPrototype[abilitiesSym];
+          if (vClassPrototype.hasOwnProperty(abilitiesSym)) {
+            $abilities = vClassPrototype[abilitiesSym];
           } else {
             $abilities = {};
-            defineProperty(aClassPrototype, abilitiesSym, $abilities);
+            defineProperty(vClassPrototype, abilitiesSym, $abilities);
           }
           $abilities['$' + vName] = abilityFn;
         }
@@ -300,32 +323,87 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   */
 
   function injectAdditionalAbility(aClass, aName, filterMethods?) {
-    let result;
-    while (aClass && aClass.prototype) {
-      if (aClass.prototype.hasOwnProperty(abilitiesSym)) {
-        const $abilities = aClass.prototype.$abilities;
-        let vAbility;
-        if (!$abilities['$' + aName] && (vAbility = $abilities[aName])) {
-          const vOptions = vAbility();
-          result = aClass;
-          if (vOptions != null) {
-            if (filterMethods) {
-              filterMethods(vOptions.methods);
-              filterMethods(vOptions.classMethods);
-            }
-            if (vOptions.methods instanceof Object) {
-              injectMethods(aClass.prototype, vOptions.methods, vOptions);
-            }
-            if (vOptions.classMethods instanceof Object) {
-              injectMethods(aClass, vOptions.classMethods, vOptions);
-            }
-          }
+    /*
+    let vAbility = (abilitiesSym in aClass.prototype) && getAdditionalAbilityOptionsFn(aClass, aName);
+    if (vAbility) {
+      if (!Array.isArray(vAbility)) {vAbility = [vAbility]}
+      for (const item of vAbility) {
+        if (typeof item === 'function') {
+          const vOptions = item();
+          applyAdditionalAbility(aClass, aName, vOptions, filterMethods)
         }
       }
-      aClass = getParentClass(aClass);
+
+      const vOptions = vAbility();
+      if (vOptions != null && vOptions.type === AdditionalInjectionType.direct) {
+        applyAdditionalAbility(aClass, aName, vOptions, filterMethods)
+        return aClass
+      }
     }
+*/
+    let result;
+    let vClass = aClass;
+    let vOnTarget = true;
+    while (vClass && vClass.prototype) {
+      if (vClass.prototype.hasOwnProperty(abilitiesSym)) {
+        let vAbility = getAdditionalAbilityOptionsFn(vClass, aName);
+        if (vAbility) {
+          if (!Array.isArray(vAbility)) {vAbility = [vAbility]}
+          for (const item of vAbility) {
+            if (typeof item === 'function') {
+              const vOptions = item();
+              if (vOptions != null) {
+                if (vOptions.type === AdditionalInjectionMode.direct) {
+                  applyAdditionalAbility(aClass, aName, vOptions, filterMethods)
+                } else {
+                  applyAdditionalAbility(vClass, aName, vOptions, filterMethods)
+                  vOnTarget = false
+                }
+              }
+            }
+          }
+          result = vClass;
+        }
+      }
+      vClass = getParentClass(vClass);
+    }
+    if (vOnTarget) {result = aClass}
     return result;
   };
 
   return abilityFn;
 };
+
+function getAdditionalAbilityOptionsFn(aClass, aName: string) {
+  let result;
+  const $abilities = aClass.prototype[abilitiesSym];
+  let vAbility;
+  if (!$abilities['$' + aName] && (vAbility = $abilities[aName])) {
+    result = vAbility;
+  }
+  return result;
+}
+
+function applyAdditionalAbility(aClass, aName, aOptions, filterMethods) {
+  if (aOptions != null) {
+    const id = aName + (aOptions.id ? '_' + aOptions.id : '')
+    let $abilitiesOpt = aClass.prototype[abilitiesOptSym]
+    if (!$abilitiesOpt || !$abilitiesOpt[id]) {
+      if (filterMethods) {
+        filterMethods(aOptions.methods);
+        filterMethods(aOptions.classMethods);
+      }
+      if (aOptions.methods instanceof Object) {
+        injectMethods(aClass.prototype, aOptions.methods, aOptions);
+      }
+      if (aOptions.classMethods instanceof Object) {
+        injectMethods(aClass, aOptions.classMethods, aOptions);
+      }
+      if (!$abilitiesOpt) {
+        $abilitiesOpt = {}
+        defineProperty(aClass.prototype, abilitiesOptSym, $abilitiesOpt);
+      }
+      $abilitiesOpt[id] = true;
+    }
+  }
+}

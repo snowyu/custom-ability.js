@@ -177,15 +177,14 @@ describe('customAbility with es6', function() {
     result.should.be.equal(Root);
     myAbilityCheck(result);
     result = testable1(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root);
     for (k in MyAbility) {
       should.exist(result[k], k);
     }
-    results = [];
     for (k in MyAbility.prototype) {
-      results.push(result.prototype.should.not.have.ownProperty(k));
+      My.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.have.property(k);
     }
-    return results;
   });
   it('should add multi abilities on same class', function() {
     var My, Root, k, ref, ref1, result, results, testable1, testable2, v;
@@ -218,12 +217,13 @@ describe('customAbility with es6', function() {
       v.should.be.equal(result.prototype[k]);
     }
     result = testable1(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root);
     for (k in MyAbility) {
       should.exist(result[k], k);
     }
     for (k in MyAbility.prototype) {
-      result.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.have.property(k);
     }
     result = testable2(Root);
     result.should.be.equal(Root);
@@ -237,15 +237,14 @@ describe('customAbility with es6', function() {
       v.should.be.equal(result.prototype[k]);
     }
     result = testable2(My);
-    result.should.be.equal(My);
+    result.should.be.equal(Root);
     for (k in OtherAbility) {
       should.exist(result[k], k);
     }
-    results = [];
     for (k in OtherAbility.prototype) {
-      results.push(result.prototype.should.not.have.ownProperty(k));
+      My.prototype.should.not.have.ownProperty(k);
+      My.prototype.should.have.property(k);
     }
-    return results;
   });
   it('should add methods and class methods to a class', function() {
     var My, k, ref, results, v;
@@ -614,8 +613,8 @@ describe('customAbility with es6', function() {
     for (k in MyAbility) {
       v = MyAbility[k];
       Mid.should.not.have.ownProperty(k);
-      Root.should.not.have.ownProperty(k);
-      A.should.have.ownProperty(k);
+      Root.should.have.ownProperty(k);
+      A.should.not.have.ownProperty(k);
       v.should.be.equal(A[k]);
     }
     ref = MyAbility.prototype;
