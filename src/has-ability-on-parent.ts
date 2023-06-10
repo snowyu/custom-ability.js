@@ -1,4 +1,4 @@
-import getPrototypeOf from 'inherits-ex/lib/getPrototypeOf';
+import {getOwnPropValue, getPrototypeOf} from 'inherits-ex';
 
 export function hasAbilityOnParent(aClass: Function, aName: string) {
   let result, vPrototype;
@@ -8,7 +8,7 @@ export function hasAbilityOnParent(aClass: Function, aName: string) {
   }
   while (vPrototype) {
     if (vPrototype.hasOwnProperty('$abilities') && vPrototype.$abilities.hasOwnProperty(aName)) {
-      result = true;
+      result = getOwnPropValue(vPrototype, 'Class') || vPrototype.constructor;
       break;
     }
     vPrototype = getPrototypeOf(vPrototype);
