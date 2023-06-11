@@ -16,7 +16,7 @@ const skipProtoNames = ['constructor', '__proto__']
 export const abilitiesSym = '$abilities'
 export const abilitiesOptSym = '$abilitiesOpt'
 
-export const AdditionalInjectionMode = { inherited: 0, direct: 1}
+export const AdditionalInjectionMode = { all: 0, target: 1}
 
 /**
  * Inject non-enumerable members of the aObject into aTargetClass
@@ -278,14 +278,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           // filterMethods(aOptions.classMethods);
         }
         if (aOptions != null) {
-          if (aOptions.methods instanceof Object) {
-            const methods = getFilteredMembers(aOptions.methods, aOptions)
-            injectMethods(vClassPrototype, methods, aOptions);
-          }
-          if (aOptions.classMethods instanceof Object) {
-            const classMethods = getFilteredMembers(aOptions.classMethods, aOptions, true)
-            injectMethods(aClass, classMethods, aOptions);
-          }
+          _applyAdditionalAbility(aClass, aOptions)
         }
 
         if (vName) {
@@ -302,12 +295,11 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       // Apply optional dependencies
       if (vDepends) {
         Object.keys(vDepends).forEach(function (name) {
-          $abilities[name] = vDepends[name];
-          const vInjectedOnParent = isInjectedOnParent(aClass, name);
+          const vOpts = $abilities[name] = vDepends[name];
+          const vInjectedOnParent = isInjectedOnParent(vTargetClass, name);
           if (vInjectedOnParent) {
-
+            injectAdditionalAbility(vTargetClass, name, aOptions, vName)
           }
-
         })
       }
     } else {
@@ -318,7 +310,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
 
   abilityFn.filter = filter;
 
-  function injectAdditionalAbility(aClass, aName, aOptions) {
+  function injectAdditionalAbility(aClass, aName, aOptions, aSelfName?: string) {
     let result;
     let vClass = aClass;
     let vOnTarget = true;
@@ -331,8 +323,8 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
             if (item && typeof item.getOpts === 'function') {
               const vOptions = item.getOpts(aOptions);
               if (vOptions != null) {
-                if (vOptions.id === undefined) {vOptions.id = item.id}
-                if (item.mode === AdditionalInjectionMode.direct) {
+                if (vOptions.id === undefined) {vOptions.id = item.id || aSelfName}
+                if (item.mode === AdditionalInjectionMode.target) {
                   applyAdditionalAbility(aClass, aName, vOptions)
                 } else {
                   applyAdditionalAbility(vClass, aName, vOptions)
@@ -363,19 +355,23 @@ function getAdditionalAbilityOptionsFn(aClass, aName: string) {
   return result;
 }
 
+function _applyAdditionalAbility(aClass, aOptions) {
+  if (aOptions.methods instanceof Object) {
+    const methods = getFilteredMembers(aOptions.methods, aOptions)
+    injectMethods(aClass.prototype, methods, aOptions);
+  }
+  if (aOptions.classMethods instanceof Object) {
+    const classMethods = getFilteredMembers(aOptions.classMethods, aOptions, true)
+    injectMethods(aClass, classMethods, aOptions);
+  }
+}
+
 function applyAdditionalAbility(aClass, aName, aOptions) {
   if (aOptions != null) {
     const id = aName + (aOptions.id ? '_' + aOptions.id : '')
     let $abilitiesOpt = aClass.prototype[abilitiesOptSym]
     if (!$abilitiesOpt || !$abilitiesOpt[id]) {
-      if (aOptions.methods instanceof Object) {
-        const methods = getFilteredMembers(aOptions.methods, aOptions)
-        injectMethods(aClass.prototype, methods, aOptions);
-      }
-      if (aOptions.classMethods instanceof Object) {
-        const classMethods = getFilteredMembers(aOptions.classMethods, aOptions, true)
-        injectMethods(aClass, classMethods, aOptions);
-      }
+      _applyAdditionalAbility(aClass, aOptions)
       if (!$abilitiesOpt) {
         $abilitiesOpt = {}
         defineProperty(aClass.prototype, abilitiesOptSym, $abilitiesOpt);
