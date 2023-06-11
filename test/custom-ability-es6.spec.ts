@@ -7,7 +7,7 @@ chai.use(sinonChai);
 import path from 'path';
 // import inherits from 'inherits-ex/lib/inherits';
 import {inherits, defineProperty} from 'inherits-ex'
-import {createAbilityInjector as customAbility} from '../src/custom-ability';
+import {abilitiesSym, createAbilityInjector as customAbility} from '../src/custom-ability';
 
 var setImmediate = setImmediate || process.nextTick;
 
@@ -456,7 +456,7 @@ describe('customAbility with es6', function() {
     testableOpts = function() {
       return {
         methods: {
-          addtional: function() {}
+          additional: function() {}
         }
       };
     };
@@ -464,13 +464,13 @@ describe('customAbility with es6', function() {
       $abilities: { MyAbility: any; };
     };
 
-    My.prototype.$abilities = {
-      MyAbility: testableOpts
+    My.prototype[abilitiesSym] = {
+      MyAbility: {getOpts: testableOpts}
     };
 
     opt = {};
     testable(My, opt);
-    My.prototype.should.have.ownProperty('addtional');
+    My.prototype.should.have.ownProperty('additional');
     myAbilityCheck(My);
   });
   it('should use inherited additional abilities', function() {
@@ -490,7 +490,7 @@ describe('customAbility with es6', function() {
     myOpts = function() {
       return {
         methods: {
-          addtional: function() {},
+          additional: function() {},
           over: overMy
         }
       };
@@ -499,8 +499,8 @@ describe('customAbility with es6', function() {
       $abilities: { MyAbility: any; };
     };
 
-    Root.prototype.$abilities = {
-      MyAbility: rootOpts
+    Root.prototype[abilitiesSym] = {
+      MyAbility: {getOpts: rootOpts}
     };
 
     class My {
@@ -510,13 +510,13 @@ describe('customAbility with es6', function() {
 
     inherits(My, Root);
 
-    My.prototype.$abilities = {
-      MyAbility: myOpts
+    My.prototype[abilitiesSym] = {
+      MyAbility: {getOpts: myOpts}
     };
 
     opt = {};
     testable(My, opt);
-    My.prototype.should.have.ownProperty('addtional');
+    My.prototype.should.have.ownProperty('additional');
     My.prototype.should.have.property('root');
     My.prototype.should.have.ownProperty('over');
     myAbilityCheck(My);
@@ -542,8 +542,8 @@ describe('customAbility with es6', function() {
       $abilities: { MyAbility: any; };
     };
 
-    Root.prototype.$abilities = {
-      MyAbility: rootOpts
+    Root.prototype[abilitiesSym] = {
+      MyAbility: {getOpts: rootOpts}
     };
 
     class My {};
@@ -567,29 +567,30 @@ describe('customAbility with es6', function() {
   it('should use additional ability via multi inherited classes', function() {
     var k, ref, v;
     class Root {
-      $abilities: { MyAbility: () => { methods: { additional: () => void; two: () => void; }; }; };
+      // $abilities: { MyAbility: () => { methods: { additional: () => void; two: () => void; }; }; };
     };
 
-    Root.prototype.$abilities = {
-      MyAbility: function() { // additinal ability to MyAbility
+    Root.prototype[abilitiesSym] = {
+      MyAbility: {getOpts() { // additional ability to MyAbility
         return {
           methods: {
             additional: function() {},
             two: function() {}
           }
         };
-      }
+      }}
     };
 
     class Mid {
-      $abilities: { MyAbility: () => { methods: { additional: () => any; iok: () => void; }; }; };
+      // $abilities: { MyAbility: () => { methods: { additional: () => any; iok: () => void; }; }; };
       static __super__: any;
     };
 
     inherits(Mid, Root);
 
-    Mid.prototype.$abilities = {
-      MyAbility: function() { // additinal ability to MyAbility
+    Mid.prototype[abilitiesSym] = {
+      MyAbility: {getOpts: function() {
+        // additional ability to MyAbility
         return {
           methods: {
             additional: function() {
@@ -598,7 +599,7 @@ describe('customAbility with es6', function() {
             iok: function() {}
           }
         };
-      }
+      }}
     };
 
     class A {};

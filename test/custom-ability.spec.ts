@@ -406,7 +406,7 @@ describe('customAbility', function() {
       function My() {}
 
       My.prototype[abilitiesSym] = {
-        MyAbility: testableOpts
+        MyAbility: {getOpts: testableOpts}
       };
 
       return My;
@@ -445,7 +445,7 @@ describe('customAbility', function() {
     class My extends Root {}
 
     Root.prototype[abilitiesSym] = {
-      MyAbility: rootOpts
+      MyAbility: {getOpts: rootOpts}
     };
 
     // function My() {}
@@ -453,7 +453,7 @@ describe('customAbility', function() {
     // inherits(My, Root);
 
     My.prototype[abilitiesSym] = {
-      MyAbility: myOpts
+      MyAbility: {getOpts: myOpts}
     };
 
     const opt = {};
@@ -492,7 +492,7 @@ describe('customAbility', function() {
     function Root() {}
 
     Root.prototype[abilitiesSym] = {
-      MyAbility: rootOpts
+      MyAbility: {getOpts: rootOpts}
     };
 
     function My() {}
@@ -500,7 +500,7 @@ describe('customAbility', function() {
     inherits(My, Root);
 
     My.prototype[abilitiesSym] = {
-      MyAbility: myOpts
+      MyAbility: {getOpts: myOpts}
     };
 
     const opt = {};
@@ -531,7 +531,7 @@ describe('customAbility', function() {
       function Root() {}
 
       Root.prototype[abilitiesSym] = {
-        MyAbility: rootOpts
+        MyAbility: {getOpts: rootOpts}
       };
 
       return Root;
@@ -569,14 +569,14 @@ describe('customAbility', function() {
       function Root() {}
 
       Root.prototype[abilitiesSym] = {
-        MyAbility: function() {
+        MyAbility: {getOpts() {
           return {
             methods: {
               additional: function() {},
               two: function() {}
             }
           };
-        }
+        }}
       };
 
       return Root;
@@ -588,7 +588,7 @@ describe('customAbility', function() {
       inherits(Mid, Root);
 
       Mid.prototype[abilitiesSym] = {
-        MyAbility: function() {
+        MyAbility: {getOpts() {
           return {
             methods: {
               additional: function() {
@@ -597,7 +597,7 @@ describe('customAbility', function() {
               iok: function() {}
             }
           };
-        }
+        }}
       };
 
       return Mid;
