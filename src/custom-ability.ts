@@ -13,9 +13,26 @@ const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
 const skipStaticNames = ['name', 'arguments', 'prototype', 'super_', '__super__', '__proto__']
 const skipProtoNames = ['constructor', '__proto__']
 
+/**
+ * A symbol used to mark a class's abilities
+ *
+ * @constant
+ * @type {Symbol}
+ */
 export const abilitiesSym = '$abilities'
+/**
+ * A symbol used to mark a class's additional ability whether injected
+ *
+ * @constant
+ * @type {Symbol}
+ */
 export const abilitiesOptSym = '$abilitiesOpt'
 
+/**
+ * The additional injection mode
+ *
+ * @enum {number}
+ */
 export const AdditionalInjectionMode = { all: 0, target: 1}
 
 /**
@@ -25,10 +42,10 @@ export const AdditionalInjectionMode = { all: 0, target: 1}
  * @param aTargetClass the target class
  * @param aObject the non-enumerable members of the object will be injected into aTargetClass
  * @param filter  It'll be injected only when filter callback function return true, if exists
- * @param isStatic Whether is static members
- * @returns already injected members name list
+ * @param isStatic  Whether the members to be injected are static
+ * @returns The names of members that have been injected
  */
-function injectMembersFromNonEnum(aTargetClass, aObject, filter?: (name:string)=>boolean, isStatic?: boolean) {
+function injectMembersFromNonEnum(aTargetClass: Function, aObject, filter?: (name:string)=>boolean, isStatic?: boolean) {
   const nonEnumNames = getNonEnumNames(aObject);
   const result = [];
   nonEnumNames.forEach(function(name: string) {
@@ -80,6 +97,10 @@ export interface AbilityOptions {
    */
   id?: string;
   /**
+   * The additional injection mode
+   */
+  mode?: number;
+  /**
    * An optional list of method names to include.
    */
   include?: string|string[]
@@ -97,6 +118,10 @@ export interface AbilityOptions {
   classMethods?: Record<string, Function>
 }
 
+/**
+ * An additional ability
+ *
+ */
 export interface AdditionalAbility {
   /**
    * the AdditionalAbilityOptions ID
@@ -111,6 +136,7 @@ export interface AdditionalAbility {
    */
   required?: string[];
   /**
+   * Returns the additional ability options if they exist
    *
    * @param options the ability Options
    * @returns the Additional Ability options if exists
@@ -118,11 +144,19 @@ export interface AdditionalAbility {
   getOpts: (options?: AbilityOptions) => AbilityOptions|undefined;
 }
 
+/**
+ * An object mapping target ability names to additional abilities
+ *
+ */
 export interface AdditionalAbilities {
   // the key is the target ability name
   [key: string]: AdditionalAbility|Array<AdditionalAbility>
 }
 
+/**
+ * The ability injector options
+ *
+ */
 export interface AbilityInjectorOptions {
   /**
    * The optional depends abilities which can work together
@@ -132,6 +166,8 @@ export interface AbilityInjectorOptions {
 
 /**
  * A function that adds(injects) the ability of a specified ability class to a target class.
+ *
+ * Note: Maybe the ability will be injected into the inheritance class.
  *
  * @param {Function} targetClass - The target class to which the ability will be added.
  * @param {AbilityOptions} [options] - An optional ability configuration object.
@@ -146,6 +182,7 @@ export type AbilityFn = (targetClass: Function, options?: AbilityOptions) => Fun
  * @param abilityClass The ability class to inject into the target class.
  * @param isGetClassFunc An optional parameter that indicates whether abilityClass should be invoked
  *                    with aClass and aOptions to get the actual ability class. defaults to false
+ * @param injectorOpts An optional injector options object
  * @returns Another function that accepts the target class and options to include or exclude specific
  *                    properties and methods.
  *                    The returned function injects the abilities into the target class and returns the modified class.
@@ -300,8 +337,6 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       // Apply optional dependencies
       if (vDepends) {
         Object.keys(vDepends).forEach(function (name) {
-          // $abilities = vTargetClass.prototype[abilitiesSym]
-          // if (!$abilities) {$abilities = vTargetClass.prototype[abilitiesSym] = {}}
           let vDepend = vDepends[name]
           if (vDepend) {
             if (!Array.isArray(vDepend)) {vDepend = [vDepend]}
@@ -355,7 +390,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
                 }
                 if (vOptions.id === undefined) {vOptions.id = item.id}
                 if (item.mode === AdditionalInjectionMode.target) {
-                  vTargets.push([vClass, vOptions])
+                  vTargets.push([aClass, vOptions, vClass])
                 } else {
                   applyAdditionalAbility(vClass, aName, vOptions)
                   vOnTarget = false
@@ -369,10 +404,10 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       vClass = getParentClass(vClass);
     }
     if (vTargets.length) {
+      // apply additional ability from parent to child
       for (let i = vTargets.length - 1; i>=0; i--) {
         const item = vTargets[i]
-        // applyAdditionalAbility(aClass, aName, vOptions, vClass)
-        applyAdditionalAbility(aClass, aName, item[1], item[0])
+        applyAdditionalAbility(item[0], aName, item[1], item[2])
       }
     }
     if (vOnTarget) {result = aClass}
@@ -382,7 +417,14 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   return abilityFn;
 };
 
-function getAdditionalAbilityOptions(aClass, aName: string) {
+/**
+ * Returns the additional ability options for a specified ability class
+ *
+ * @param aClass - The class to which the additional ability options belong
+ * @param aName - The name of the ability
+ * @returns The additional ability options
+ */
+function getAdditionalAbilityOptions(aClass: Function, aName: string) {
   const $abilities = aClass.prototype[abilitiesSym];
   const result: AdditionalAbility|Array<AdditionalAbility> = $abilities && $abilities[aName];
   return result;
@@ -399,6 +441,14 @@ function _applyAdditionalAbility(aClass, aOptions) {
   }
 }
 
+/**
+ * Adds an additional ability to a class based on the provided options
+ *
+ * @param {Function} aClass - The target class to which the additional ability will be added
+ * @param {string} aName - The name of the additional ability
+ * @param {AbilityOptions} aOptions - The options that describe which methods to inject
+ * @param {Function} [fromClass] - The class from which the additional ability is being applied
+ */
 function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
   if (aOptions != null) {
     let fromId = fromClass && aClass !== fromClass ? '_' + fromClass.name : ''
@@ -415,6 +465,13 @@ function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
   }
 }
 
+/**
+ * Pushes an array of items into a destination array, but only if the items are not already in the destination array
+ *
+ * @param dest - The destination array
+ * @param src - The source array or item
+ * @returns The destination array with the new items added
+ */
 function arrayPushOnly(dest: Array<any>, src: Array<any>|any) {
   if (src !== undefined) {
     if (!Array.isArray(src)) {src = [src]}
@@ -426,7 +483,13 @@ function arrayPushOnly(dest: Array<any>, src: Array<any>|any) {
 
 }
 
-function getMembers(aClass) {
+/**
+ * Returns an array of all members of a class, including static and prototype members
+ *
+ * @param aClass - The class to get the members from
+ * @returns An array of member names
+ */
+function getMembers(aClass: Function) {
   let result: Array<string> = getNonEnumNames(aClass).filter(n => !skipStaticNames.includes(n)).map(name => '@' + name)
   result = result.concat(Object.keys(aClass).map(name => '@' + name))
   result = result.concat(getNonEnumNames(aClass.prototype).filter(n => !skipProtoNames.includes(n)))
@@ -434,6 +497,16 @@ function getMembers(aClass) {
   return result
 }
 
+/**
+ * Determines whether to include a member based on the provided options
+ *
+ * @private
+ * @param {string} k - The name of the member
+ * @param {string|string[]} aIncludes - The names of members to include
+ * @param {string|string[]} aExcludes - The names of members to exclude
+ * @param {boolean} [aIsStatic] - Whether the member is a static member
+ * @returns {boolean} - Whether to include the member
+ */
 function filter(k, aIncludes, aExcludes, aIsStatic?: boolean) {
   if (aIsStatic) {
     k = '@' + k;
@@ -455,6 +528,16 @@ function filter(k, aIncludes, aExcludes, aIsStatic?: boolean) {
   return result;
 };
 
+/**
+ * Returns an object containing only the members that pass the filter
+ *
+ * @function
+ * @private
+ * @param {Object} obj - The object to filter
+ * @param {AbilityOptions} aOptions - The options that describe which members to include
+ * @param {boolean} [isStatic] - Whether the members are static members
+ * @returns {Object} - An object containing only the members that pass the filter
+ */
 function getFilteredMembers(obj, aOptions, isStatic?: boolean) {
   const result = {}
   Object.keys(obj).forEach(name => {
