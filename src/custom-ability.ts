@@ -340,7 +340,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           let vDepend = vDepends[name]
           if (vDepend) {
             if (!Array.isArray(vDepend)) {vDepend = [vDepend]}
-            vDepend.forEach(item => {if(!item.id) item.id = vName})
+            vDepend.forEach(item => !item.id && (item.id = vName))
 
             let vDependAbility = $abilities[name]
             if (vDependAbility) {
@@ -451,7 +451,7 @@ function _applyAdditionalAbility(aClass, aOptions) {
  */
 function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
   if (aOptions != null) {
-    let fromId = fromClass && aClass !== fromClass ? '_' + fromClass.name : ''
+    const fromId = fromClass && aClass !== fromClass ? '_' + fromClass.name : ''
     const id = aName + (aOptions.id ? '_' + aOptions.id : fromId)
     let $abilitiesOpt = aClass.prototype[abilitiesOptSym]
     if (!$abilitiesOpt || !$abilitiesOpt[id]) {
@@ -548,8 +548,9 @@ function getFilteredMembers(obj, aOptions, isStatic?: boolean) {
   return result
 }
 
+/*
 function cloneObj(src: object, maxDeep = 5) {
-  if (!src) return src;
+  if (!src) {return src};
   const result = {}
   Object.keys(src).forEach(key => {
     const value = src[key]
@@ -564,3 +565,4 @@ function cloneObj(src: object, maxDeep = 5) {
   })
   return result
 }
+*/
