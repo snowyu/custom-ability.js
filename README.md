@@ -380,6 +380,7 @@ The exported function returns the injector function (`WithAbilityFn(targetClass,
 * Export all helper functions on index.js
 * TypeScript supports
 * NodeJS >= 12
+* **broken change** `require` rename to `requireAbility`
 * **broken change** The additional ability options total changed.
 * **broken change** Add new injectorOpts option to createAbilityInjector for optional depends AdditionalAbility
 * **broken change** Support multi AdditionalAbilities on the same ability. The AdditionalAbity option is total changed. see AdditionalAbility type
