@@ -1,6 +1,27 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+
+## [2.0.0-alpha.4](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.3...v2.0.0-alpha.4) (2023-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* add new injectorOpts option to createAbilityInjector for optional depends AdditionalAbility
+* Support multi AdditionalAbities on the same ability. The AdditionalAbity option is total changed. see AdditionalAbility type
+
+### Features
+
+* add new injectorOpts option to createAbilityInjector for optional depends AdditionalAbility ([fb3e820](https://github.com/snowyu/custom-ability.js/commit/fb3e820e8417f6864d9a91b008eb92f2f6996936))
+* Support multi AdditionalAbities on the same ability. The AdditionalAbity option is total changed. see AdditionalAbility type ([b167523](https://github.com/snowyu/custom-ability.js/commit/b1675232626df28a40af5de2f0ada5eac47aa50d))
+
+
+### Bug Fixes
+
+* can not inject all inherited AdditionalAbility on ES6 Class ([0d87857](https://github.com/snowyu/custom-ability.js/commit/0d87857ddc0d8df661e8963eae1816186a47ef0a))
+* many bugs on the additional ability depends of the injectorOptions ([d3e30f4](https://github.com/snowyu/custom-ability.js/commit/d3e30f42681394441430b5b9c764795cd8667b53))
+* should inject the static methoods on the same class for ES6 Class and inherits-ex supports static member inheritance now ([3f832db](https://github.com/snowyu/custom-ability.js/commit/3f832dbee2ee9f4628bc0a7e9d2f737a9ed8f458))
+* should not duplicate inject additional abilities on base class ([0ae6f1b](https://github.com/snowyu/custom-ability.js/commit/0ae6f1b7a9cee88351dd44cdedef741a9d9bffe4))
 
 ## [2.0.0-alpha.3](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-04-19)
 
