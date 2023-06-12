@@ -30,8 +30,6 @@ export const abilitiesOptSym = '$abilitiesOpt'
 
 /**
  * The additional injection mode
- *
- * @enum {number}
  */
 export const AdditionalInjectionMode = { all: 0, target: 1}
 
