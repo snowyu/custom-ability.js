@@ -98,9 +98,24 @@ export interface AbilityOptions {
 }
 
 export interface AdditionalAbility {
-  id?: string; // the AdditionalAbilityOptions ID
-  mode?: number;    // the injection mode
-  getOpts: (options?: AbilityOptions) => AbilityOptions;
+  /**
+   * the AdditionalAbilityOptions ID
+   */
+  id?: string;
+  /**
+   * the Additional Injection Mode
+   */
+  mode?: number;
+  /**
+   * the list of required methods
+   */
+  required?: string[];
+  /**
+   *
+   * @param options the ability Options
+   * @returns the Additional Ability options if exists
+   */
+  getOpts: (options?: AbilityOptions) => AbilityOptions|undefined;
 }
 
 export interface AdditionalAbilities {
@@ -109,7 +124,9 @@ export interface AdditionalAbilities {
 }
 
 export interface AbilityInjectorOptions {
-  // the optional depends abilities which can work together
+  /**
+   * The optional depends abilities which can work together
+   */
   depends?: AdditionalAbilities;
 }
 
@@ -147,6 +164,7 @@ export function createAbilityInjector(abilityClass: Function, injectorOpts?: Abi
  *                    If a core method is a static method, it must be prefixed with the "@" symbol.
  * @param isGetClassFunc An optional parameter that indicates whether abilityClass should be invoked
  *                    with aClass and aOptions to get the actual ability class. defaults to false
+ * @param injectorOpts An optional injector options object
  * @returns Another function that accepts the target class and options to include or exclude specific
  *                    properties and methods.
  *                    The returned function injects the abilities into the target class and returns the modified class.
@@ -161,7 +179,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
     aCoreMethod = undefined;
   }
 
-  if (typeof isGetClassFunc !== 'boolean') {
+  if (isGetClassFunc !== undefined && typeof isGetClassFunc !== 'boolean') {
     injectorOpts = isGetClassFunc;
     isGetClassFunc = undefined;
   }
@@ -197,9 +215,9 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       if (!(vHasCoreMethod || ($abilities && $abilities['$' + vName]))) {
         let vIncludeMembers!: Array<string>
         let vFilterMembers!: (name: string) => boolean
-        const vHasOptions = aOptions && (aOptions.include || aOptions.exclude)
+        const vHasIncludeOptions = aOptions && (aOptions.include || aOptions.exclude)
 
-        if (vHasOptions) {
+        if (vHasIncludeOptions) {
           let arr = aOptions.include
           const hasExclude = typeof aOptions.exclude === 'string' || (aOptions.exclude && aOptions.exclude.length)
           if (typeof arr === 'string') {arr = [arr]}
@@ -239,7 +257,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           }
         }
 
-        if (!vHasOptions) {
+        if (!vHasIncludeOptions) {
           // inject the static methods
           let vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, null, true);
           // inject the enumerable members
@@ -263,19 +281,6 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           extendFilter(vClassPrototype, AbilityClass.prototype, function(k) {
             return (vExcludes.indexOf(k) === -1 && vFilterMembers(k));
           });
-
-
-          // if (vName) {
-          //   vAdditionalAbilityInjected = injectAdditionalAbility(aClass, vName, filterMethods);
-          // }
-          // extendFilter(vAdditionalAbilityInjected, AbilityClass, vFilterMembers);
-          // if (vAdditionalAbilityInjected) {
-          //   vClassPrototype = vAdditionalAbilityInjected.prototype;
-          // }
-
-
-          // filterMethods(aOptions.methods);
-          // filterMethods(aOptions.classMethods);
         }
         if (aOptions != null) {
           _applyAdditionalAbility(aClass, aOptions)
@@ -295,10 +300,24 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       // Apply optional dependencies
       if (vDepends) {
         Object.keys(vDepends).forEach(function (name) {
-          const vOpts = $abilities[name] = vDepends[name];
-          const vInjectedOnParent = isInjectedOnParent(vTargetClass, name);
-          if (vInjectedOnParent) {
-            injectAdditionalAbility(vTargetClass, name, aOptions, vName)
+          // $abilities = vTargetClass.prototype[abilitiesSym]
+          // if (!$abilities) {$abilities = vTargetClass.prototype[abilitiesSym] = {}}
+          let vDepend = vDepends[name]
+          if (vDepend) {
+            if (!Array.isArray(vDepend)) {vDepend = [vDepend]}
+            vDepend.forEach(item => {if(!item.id) item.id = vName})
+
+            let vDependAbility = $abilities[name]
+            if (vDependAbility) {
+              if (!Array.isArray(vDependAbility)) {$abilities[name] = vDependAbility = [vDependAbility]}
+              vDependAbility.push(vDepends[name])
+            } else {
+              $abilities[name] = vDepends[name]
+            }
+            const vInjectedOnParent = isInjectedOnParent(vTargetClass, name);
+            if (vInjectedOnParent) {
+              injectAdditionalAbility(vTargetClass, name, aOptions)
+            }
           }
         })
       }
@@ -310,22 +329,33 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
 
   abilityFn.filter = filter;
 
-  function injectAdditionalAbility(aClass, aName, aOptions, aSelfName?: string) {
+  function injectAdditionalAbility(aClass, aName, aOptions) {
     let result;
     let vClass = aClass;
     let vOnTarget = true;
+    const vTargets = []
     while (vClass && vClass.prototype) {
       if (vClass.prototype.hasOwnProperty(abilitiesSym)) {
-        let vAbility = getAdditionalAbilityOptionsFn(vClass, aName);
+        let vAbility = getAdditionalAbilityOptions(vClass, aName);
         if (vAbility) {
           if (!Array.isArray(vAbility)) {vAbility = [vAbility]}
           for (const item of vAbility) {
             if (item && typeof item.getOpts === 'function') {
               const vOptions = item.getOpts(aOptions);
               if (vOptions != null) {
-                if (vOptions.id === undefined) {vOptions.id = item.id || aSelfName}
+                if (item.required && item.required.length && aOptions && (aOptions.include || aOptions.exclude)) {
+                  let vMissingMethod
+                  for (const n of item.required) {
+                    if (!filter(n, aOptions.include, aOptions.exclude)) {
+                      vMissingMethod = true
+                      break
+                    }
+                  }
+                  if (vMissingMethod) {continue}
+                }
+                if (vOptions.id === undefined) {vOptions.id = item.id}
                 if (item.mode === AdditionalInjectionMode.target) {
-                  applyAdditionalAbility(aClass, aName, vOptions)
+                  vTargets.push([vClass, vOptions])
                 } else {
                   applyAdditionalAbility(vClass, aName, vOptions)
                   vOnTarget = false
@@ -338,6 +368,13 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
       }
       vClass = getParentClass(vClass);
     }
+    if (vTargets.length) {
+      for (let i = vTargets.length - 1; i>=0; i--) {
+        const item = vTargets[i]
+        // applyAdditionalAbility(aClass, aName, vOptions, vClass)
+        applyAdditionalAbility(aClass, aName, item[1], item[0])
+      }
+    }
     if (vOnTarget) {result = aClass}
     return result;
   };
@@ -345,13 +382,9 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   return abilityFn;
 };
 
-function getAdditionalAbilityOptionsFn(aClass, aName: string) {
-  let result: AdditionalAbility|Array<AdditionalAbility>;
+function getAdditionalAbilityOptions(aClass, aName: string) {
   const $abilities = aClass.prototype[abilitiesSym];
-  let vAbility;
-  if (!$abilities['$' + aName] && (vAbility = $abilities[aName])) {
-    result = vAbility;
-  }
+  const result: AdditionalAbility|Array<AdditionalAbility> = $abilities && $abilities[aName];
   return result;
 }
 
@@ -366,9 +399,10 @@ function _applyAdditionalAbility(aClass, aOptions) {
   }
 }
 
-function applyAdditionalAbility(aClass, aName, aOptions) {
+function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
   if (aOptions != null) {
-    const id = aName + (aOptions.id ? '_' + aOptions.id : '')
+    let fromId = fromClass && aClass !== fromClass ? '_' + fromClass.name : ''
+    const id = aName + (aOptions.id ? '_' + aOptions.id : fromId)
     let $abilitiesOpt = aClass.prototype[abilitiesOptSym]
     if (!$abilitiesOpt || !$abilitiesOpt[id]) {
       _applyAdditionalAbility(aClass, aOptions)
@@ -431,3 +465,19 @@ function getFilteredMembers(obj, aOptions, isStatic?: boolean) {
   return result
 }
 
+function cloneObj(src: object, maxDeep = 5) {
+  if (!src) return src;
+  const result = {}
+  Object.keys(src).forEach(key => {
+    const value = src[key]
+    if (Array.isArray(value)) {
+      result[key] = value.slice()
+    } else if (maxDeep > 0 && value instanceof Object) {
+      --maxDeep
+      result[key] = cloneObj(value, maxDeep)
+    } else {
+      result[key] = src[key]
+    }
+  })
+  return result
+}

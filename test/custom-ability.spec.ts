@@ -7,7 +7,7 @@ chai.use(sinonChai);
 import path from 'path';
 import inherits from 'inherits-ex/lib/inherits';
 import defineProperty from 'util-ex/lib/defineProperty';
-import {abilitiesSym, createAbilityInjector} from '../src/custom-ability';
+import {AdditionalInjectionMode, abilitiesSym, abilitiesOptSym, createAbilityInjector} from '../src/custom-ability';
 
 
 var setImmediate = setImmediate || process.nextTick;
@@ -393,246 +393,400 @@ describe('customAbility', function() {
     assert.equal(oldExec, 1, 'should execute the original func once');
     assert.equal(newExec, 1, 'should execute the new func once');
   });
-  it('should use additional abilities', function() {
-    let My, opt, testableOpts;
-    testableOpts = function() {
-      return {
-        methods: {
-          additional: function() {}
-        }
+  describe('AdditionalAbility', () => {
+    it('should use additional abilities', function() {
+      let My, opt, testableOpts;
+      testableOpts = function() {
+        return {
+          methods: {
+            additional: function() {}
+          }
+        };
       };
-    };
-    My = (function() {
-      function My() {}
+      My = (function() {
+        function My() {}
+
+        My.prototype[abilitiesSym] = {
+          MyAbility: {getOpts: testableOpts}
+        };
+
+        return My;
+
+      })();
+      opt = {};
+      testable(My, opt);
+      My.prototype.should.have.ownProperty('additional');
+      myAbilityCheck(My);
+      My.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(My.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+    });
+    it('should not duplicate inject additional abilities on base class', function() {
+      const overRoot = sinon.spy(function(){
+        expect(this).not.ownProperty('self')
+      });
+      const overMy = sinon.spy(function() {
+        return (My as any).__super__.over.apply(this, arguments);
+      });
+      function rootOpts() {
+        return {
+          methods: {
+            root: function() {},
+            over: overRoot
+          }
+        };
+      };
+      function myOpts() {
+        return {
+          methods: {
+            additional: function() {},
+            over: overMy
+          }
+        };
+      };
+      // function Root() {}
+      class Root {}
+      class My extends Root {}
+
+      Root.prototype[abilitiesSym] = {
+        MyAbility: {getOpts: rootOpts}
+      };
+
+      // function My() {}
+
+      // inherits(My, Root);
 
       My.prototype[abilitiesSym] = {
-        MyAbility: {getOpts: testableOpts}
+        MyAbility: {getOpts: myOpts}
       };
 
-      return My;
+      const opt = {};
+      testable(My, opt);
 
-    })();
-    opt = {};
-    testable(My, opt);
-    My.prototype.should.have.ownProperty('additional');
-    myAbilityCheck(My);
-  });
-  it('should not duplicate inject additional abilities on base class', function() {
-    const overRoot = sinon.spy(function(){
-      expect(this).not.ownProperty('self')
+      // test inject duplication
+      // function My1() {}
+      // inherits(My1, Root);
+      class My1 extends Root {}
+      testable(My1, opt);
+      const my:any = new My1;
+      my.over(3, 1, 2);
+      overRoot.should.have.been.calledWith(3, 1, 2);
     });
-    const overMy = sinon.spy(function() {
-      return (My as any).__super__.over.apply(this, arguments);
-    });
-    function rootOpts() {
-      return {
-        methods: {
-          root: function() {},
-          over: overRoot
-        }
+    it('should use inherited additional abilities', function() {
+      const overRoot = sinon.spy();
+      const overMy = sinon.spy(function() {
+        return (My as any).__super__.over.apply(this, arguments);
+      });
+      function rootOpts() {
+        return {
+          methods: {
+            root: function() {},
+            over: overRoot
+          }
+        };
       };
-    };
-    function myOpts() {
-      return {
-        methods: {
-          additional: function() {},
-          over: overMy
-        }
+      function myOpts() {
+        return {
+          methods: {
+            additional: function() {},
+            over: overMy
+          }
+        };
       };
-    };
-    // function Root() {}
-    class Root {}
-    class My extends Root {}
-
-    Root.prototype[abilitiesSym] = {
-      MyAbility: {getOpts: rootOpts}
-    };
-
-    // function My() {}
-
-    // inherits(My, Root);
-
-    My.prototype[abilitiesSym] = {
-      MyAbility: {getOpts: myOpts}
-    };
-
-    const opt = {};
-    testable(My, opt);
-
-    // test inject duplication
-    // function My1() {}
-    // inherits(My1, Root);
-    class My1 extends Root {}
-    testable(My1, opt);
-    const my:any = new My1;
-    my.over(3, 1, 2);
-    overRoot.should.have.been.calledWith(3, 1, 2);
-  });
-  it('should use inherited additional abilities', function() {
-    const overRoot = sinon.spy();
-    const overMy = sinon.spy(function() {
-      return (My as any).__super__.over.apply(this, arguments);
-    });
-    function rootOpts() {
-      return {
-        methods: {
-          root: function() {},
-          over: overRoot
-        }
-      };
-    };
-    function myOpts() {
-      return {
-        methods: {
-          additional: function() {},
-          over: overMy
-        }
-      };
-    };
-    function Root() {}
-
-    Root.prototype[abilitiesSym] = {
-      MyAbility: {getOpts: rootOpts}
-    };
-
-    function My() {}
-
-    inherits(My, Root);
-
-    My.prototype[abilitiesSym] = {
-      MyAbility: {getOpts: myOpts}
-    };
-
-    const opt = {};
-    testable(My, opt);
-    My.prototype.should.have.ownProperty('additional');
-    My.prototype.should.have.property('root');
-    My.prototype.should.have.ownProperty('over');
-    myAbilityCheck(My);
-    let my = new My;
-    my.over(1, 2, 3);
-    overMy.should.have.been.calledOnce;
-    overMy.should.have.been.calledWith(1, 2, 3);
-    overRoot.should.have.been.calledOnce;
-    overRoot.should.have.been.calledWith(1, 2, 3);
-  });
-  it('should use additional ability via multi classes', function() {
-    var My, My1, Root, opt, overRoot, rootOpts;
-    overRoot = sinon.spy();
-    rootOpts = function() {
-      return {
-        methods: {
-          root: function() {},
-          over: overRoot
-        }
-      };
-    };
-    Root = (function() {
       function Root() {}
 
       Root.prototype[abilitiesSym] = {
         MyAbility: {getOpts: rootOpts}
       };
 
-      return Root;
-
-    })();
-    My = (function() {
       function My() {}
 
       inherits(My, Root);
 
-      return My;
+      My.prototype[abilitiesSym] = {
+        MyAbility: {getOpts: myOpts}
+      };
 
-    })();
-    My1 = (function() {
-      function My1() {}
+      const opt = {};
+      testable(My, opt);
+      My.prototype.should.have.ownProperty('additional');
+      My.prototype.should.not.have.ownProperty('root');
+      My.prototype.should.have.property('root');
+      My.prototype.should.have.ownProperty('over');
+      myAbilityCheck(My);
+      My.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(My.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+      Root.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(Root.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+      let my = new My;
+      my.over(1, 2, 3);
+      overMy.should.have.been.calledOnce;
+      overMy.should.have.been.calledWith(1, 2, 3);
+      overRoot.should.have.been.calledOnce;
+      overRoot.should.have.been.calledWith(1, 2, 3);
+    });
+    it('should use additional ability via multi classes', function() {
+      var My, My1, Root, opt, overRoot, rootOpts;
+      overRoot = sinon.spy();
+      rootOpts = function() {
+        return {
+          methods: {
+            root: function() {},
+            over: overRoot
+          }
+        };
+      };
+      Root = (function() {
+        function Root() {}
 
-      inherits(My1, Root);
+        Root.prototype[abilitiesSym] = {
+          MyAbility: {getOpts: rootOpts}
+        };
 
-      return My1;
+        return Root;
 
-    })();
-    opt = {};
-    testable(My, opt);
-    My.prototype.should.have.property('root');
-    My.prototype.should.have.property('over');
-    myAbilityCheck(My);
-    testable(My1);
-    My1.prototype.should.have.property('root');
-    My1.prototype.should.have.property('over');
-    myAbilityCheck(My1);
-  });
-  it('should use additional ability via multi inherited classes', function() {
-    var A, Mid, Root, k, ref, v;
-    Root = (function() {
+      })();
+      My = (function() {
+        function My() {}
+
+        inherits(My, Root);
+
+        return My;
+
+      })();
+      My1 = (function() {
+        function My1() {}
+
+        inherits(My1, Root);
+
+        return My1;
+
+      })();
+      opt = {};
+      testable(My, opt);
+      My.prototype.should.have.property('root');
+      My.prototype.should.not.have.ownProperty('root');
+      My.prototype.should.have.property('over');
+      myAbilityCheck(My);
+      My.prototype.should.not.have.ownProperty(abilitiesOptSym);
+      Root.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(Root.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+      testable(My1);
+      My1.prototype.should.have.property('root');
+      My1.prototype.should.have.property('over');
+      myAbilityCheck(My1);
+    });
+    it('should use additional ability via multi inherited classes', function() {
+      var A, Mid, Root, k, ref, v;
+      Root = (function() {
+        function Root() {}
+
+        Root.prototype[abilitiesSym] = {
+          MyAbility: {getOpts() {
+            return {
+              methods: {
+                additional: function() {},
+                two: function() {}
+              }
+            };
+          }}
+        };
+
+        return Root;
+
+      })();
+      Mid = (function() {
+        function Mid() {}
+
+        inherits(Mid, Root);
+
+        Mid.prototype[abilitiesSym] = {
+          MyAbility: {getOpts() {
+            return {
+              methods: {
+                additional: function() {
+                  return (Mid as any).__super__.additional.apply(this, arguments);
+                },
+                iok: function() {}
+              }
+            };
+          }}
+        };
+
+        return Mid;
+
+      })();
+      A = (function() {
+        function A() {}
+
+        inherits(A, Mid);
+
+        testable(A);
+
+        return A;
+
+      })();
+      myAbilityCheck(A);
+      for (k in MyAbility) {
+        v = MyAbility[k];
+        Mid.should.not.have.ownProperty(k);
+        Root.should.have.ownProperty(k);
+        A.should.not.have.ownProperty(k);
+        v.should.be.equal(A[k]);
+      }
+      ref = MyAbility.prototype;
+      for (k in ref) {
+        v = ref[k];
+        A.prototype.should.not.have.ownProperty(k);
+        Mid.prototype.should.not.have.ownProperty(k);
+        Root.prototype.should.have.ownProperty(k);
+      }
+      Root.prototype.should.have.ownProperty('additional');
+      Root.prototype.should.have.ownProperty('two');
+      Mid.prototype.should.have.ownProperty('additional');
+      Mid.prototype.should.have.ownProperty('iok');
+    });
+    it('should not inject additional ability if no all required methods exists', function() {
+      let My, opt, testableOpts;
+      testableOpts = function() {
+        return {
+          methods: {
+            additional: function() {}
+          }
+        };
+      };
+      My = (function() {
+        function My() {}
+
+        My.prototype[abilitiesSym] = {
+          MyAbility: {getOpts: testableOpts, required: ['one', 'two']}
+        };
+
+        return My;
+
+      })();
+      opt = {exclude: 'one'};
+      testable(My, opt);
+      My.prototype.should.not.have.ownProperty('additional');
+      My.prototype.should.not.have.ownProperty(abilitiesOptSym);
+    });
+    it('should inject additional ability via depends in injectorOptions', function() {
+      function testableOpts() {
+        return {
+          methods: {
+            additional: function() {}
+          }
+        };
+      };
+
+      function MyAbility1() {}
+      MyAbility1.prototype.additional2 = sinon.spy()
+
+      const testable1 = createAbilityInjector(MyAbility1, {depends: {
+        MyAbility: {
+          getOpts: testableOpts
+        }
+      }});
+
+      function My() {}
+
+      let opt = {};
+      testable1(My, opt);
+      My.prototype.should.have.ownProperty('additional2');
+      My.prototype.should.have.ownProperty(abilitiesSym);
+      expect(My.prototype[abilitiesSym]).to.have.ownProperty('MyAbility')
+      testable(My, opt);
+      My.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(My.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility_MyAbility1', true)
+      My.prototype.should.have.ownProperty('additional');
+    });
+    it('should inject additional ability via depends in injectorOptions after already injected ability', function() {
+      function testableOpts() {
+        return {
+          methods: {
+            additional: function() {}
+          }
+        };
+      };
+
+      function MyAbility1() {}
+      MyAbility1.prototype.additional2 = sinon.spy()
+
+      const testable1 = createAbilityInjector(MyAbility1, {depends: {
+        MyAbility: {
+          getOpts: testableOpts
+        }
+      }});
+
+      function My() {}
+
+      let opt = {};
+      testable(My, opt);
+      myAbilityCheck(My)
+      My.prototype.should.have.ownProperty(abilitiesSym);
+      My.prototype.should.not.have.ownProperty(abilitiesOptSym);
+
+      testable1(My, opt);
+      My.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(My.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility_MyAbility1', true)
+      My.prototype.should.have.ownProperty('additional');
+      My.prototype.should.have.ownProperty('additional2');
+    });
+    it('should inject additional abilities on target only after mode is target', function() {
+      // all additional ability on inheritance classes are injected to target class together.
+      // and can be super call.
+      const overRoot = sinon.spy();
+      const overMy = sinon.spy(function() {
+        return this.super(...arguments)
+      });
+      function rootOpts() {
+        return {
+          methods: {
+            root: function() {},
+            over: overRoot
+          }
+        };
+      };
+      function myOpts() {
+        return {
+          methods: {
+            additional: function() {},
+            over: overMy
+          }
+        };
+      };
       function Root() {}
 
       Root.prototype[abilitiesSym] = {
-        MyAbility: {getOpts() {
-          return {
-            methods: {
-              additional: function() {},
-              two: function() {}
-            }
-          };
-        }}
+        MyAbility: {getOpts: rootOpts, mode: AdditionalInjectionMode.target}
       };
 
-      return Root;
+      function My() {}
 
-    })();
-    Mid = (function() {
-      function Mid() {}
+      inherits(My, Root);
 
-      inherits(Mid, Root);
-
-      Mid.prototype[abilitiesSym] = {
-        MyAbility: {getOpts() {
-          return {
-            methods: {
-              additional: function() {
-                return (Mid as any).__super__.additional.apply(this, arguments);
-              },
-              iok: function() {}
-            }
-          };
-        }}
+      My.prototype[abilitiesSym] = {
+        MyAbility: {getOpts: myOpts, mode: AdditionalInjectionMode.target}
       };
 
-      return Mid;
-
-    })();
-    A = (function() {
-      function A() {}
-
-      inherits(A, Mid);
-
-      testable(A);
-
-      return A;
-
-    })();
-    myAbilityCheck(A);
-    for (k in MyAbility) {
-      v = MyAbility[k];
-      Mid.should.not.have.ownProperty(k);
-      Root.should.have.ownProperty(k);
-      A.should.not.have.ownProperty(k);
-      v.should.be.equal(A[k]);
-    }
-    ref = MyAbility.prototype;
-    for (k in ref) {
-      v = ref[k];
-      A.prototype.should.not.have.ownProperty(k);
-      Mid.prototype.should.not.have.ownProperty(k);
-      Root.prototype.should.have.ownProperty(k);
-    }
-    Root.prototype.should.have.ownProperty('additional');
-    Root.prototype.should.have.ownProperty('two');
-    Mid.prototype.should.have.ownProperty('additional');
-    Mid.prototype.should.have.ownProperty('iok');
+      const opt = {};
+      testable(My, opt);
+      My.prototype.should.have.ownProperty('additional');
+      My.prototype.should.have.ownProperty('root');
+      My.prototype.should.have.ownProperty('over');
+      myAbilityCheck(My);
+      My.prototype.should.have.ownProperty(abilitiesOptSym);
+      expect(My.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+      Root.prototype.should.not.have.ownProperty(abilitiesOptSym);
+      // expect(Root.prototype[abilitiesOptSym]).to.have.ownProperty('MyAbility', true)
+      let my = new My;
+      my.over(1, 2, 3);
+      overMy.should.have.been.calledOnce;
+      overMy.should.have.been.calledWith(1, 2, 3);
+      overRoot.should.have.been.calledOnce;
+      overRoot.should.have.been.calledWith(1, 2, 3);
+    });
   });
+
   describe('use the injectMethods(AOP) to hook', function() {
     var OneAbility, oneTestable;
     OneAbility = (function() {
