@@ -4,32 +4,33 @@ This library provides a simple way to inject abilities into classes. An "ability
 
 Sometimes we may feel that a class is too large, containing too many features or methods. In such cases, as a developer, we can extract some of these functions as separate abilities, which users can use selectively based on their needs.
 
-**Features:**
+## Features
 
 * Allows you to easily inject "abilities" (i.e. methods) from one class into another class, without needing to extend the target class.
 * Can inject both static and instance methods.
+* Allows the ability class to **overload** an existing method in the target class with its own implementation, while still being able to call the original implementation of the method in the target class
+  * These methods should be **non-enumerable members** in the target class. All methods defined in an ES6 class are **non-enumerable**.
+  * Which allows the ability to modify or supplement the behavior of the original method without fully replacing its functionality.
 * Allows you to specify a set of "core methods" for the ability class, which will be used to check if the ability has already been injected into a target class.
 * Prevents the same ability from being injected multiple times into the same class.
   * The mechanism to prevent duplicate injection of the same ability is achieved through the `$abilities` member on the prototype of the target class. This member records all injected ability names (i.e. abilityClass.name).
   * It will traverse and check the parent classes of the target class until it finds the `$abilities`.
   * Additionally, if the `coreMethod` parameter is set, the first method name in `coreMethod` will also be checked in the target class.
 * Supports optional include and exclude parameters, which allow you to specify which methods should be injected or excluded from injection.
-* Supports optional methods and classMethods parameters, which allow you to inject additional methods into the target class.
+* Supports optional methods and classMethods parameters, which allow you to inject/**overwrite** additional methods into the target class.
+* Supports optional additional abilities
 
-**Usage:**
+## Method overloading(Replace Exists Methods)
 
-1. Define an ability class that contains the methods you want to inject into other classes.
-2. Use the `createAbilityInjector` function to create an injector function that can inject the ability into target classes.
-3. Call the new function with the ability class and any optional parameters to inject the ability into a target class.
+All methods defined in an ES6 class are **non-enumerable**, which means that the ability injection system enables **method overloading** for all methods in the class. If a method is not defined in an ES6 class, it may be enumerable and will be overwritten directly with the ability's own implementation.
 
-**Note**: The all **non-enumerable members** on the Ability class will be injected into the target class.
-
-**Replace Exists Methods**
+### The Advance Method overloading
 
 if you wanna “replace” and call the methods that already exist in a class, you can add the same method name prefixed with "`$`" on the ability class, add call the original method in this way:
 
 ```javascript
-const makeAbility = require('custom-ability')
+const createAbilityInjector = require('custom-ability')
+
 class Feature {
  // the same method name prefixed with "`$`"
  $init() {
@@ -45,10 +46,10 @@ class Feature {
 }
 // if the target class has no the init method, it(the enumerable method) will be injected
 Feature.prototype.init = function() {this._init.apply(this, arguments)}
-const addFeatureTo = makeAbility(Feature)
+const addFeatureTo = createAbilityInjector(Feature)
 
-class My {
-}
+class My {}
+
 addFeatureTo(My)
 expect(My.prototype.init).toStrictEqual(Feature.prototype.init)
 
@@ -61,9 +62,17 @@ expect(My2.prototype.init).toStrictEqual(Feature.prototype.$init)
 
 ```
 
+## Usage
+
+1. Define an ability class that contains the static members or instance members you want to inject into other classes.
+2. Use the `createAbilityInjector` function to create an injector function that can inject the ability into target classes.
+3. Call the new injector function with any optional parameters to inject the ability into a target class.
+
 ## Examples
 
-Suppose we wanna add the RefCount ability to any class directly.
+Suppose we wanna add the `RefCount` ability to any class directly.
+
+The `RefCount` ability enables `reference counting`, which helps track and manage instances of the class more easily. When a new reference to an instance is created, the addRef method is called, and when the reference is released, the release method is called. This enables the RefCount ability to keep track of the number of references to the instance and automatically free up memory when the last reference is released. This can be helpful when working with resources or objects that have complex lifecycle management requirements.
 
 the `RefCount` ability will add the following members to your class.
 and you should implement the `destroy` method which will be called
@@ -83,7 +92,7 @@ same methods in your class before you apply the new ability.
 
 ```js
 // ability.js
-const makeAbility = require('custom-ability')
+import {createAbilityInjector} from 'custom-ability'
 
 class RefCountable {
   // the class methods if any:
@@ -112,7 +121,8 @@ class RefCountable {
 // # We set the `addRef` method as the core methods.
 // # The Core methods are the ability MUST have.
 // # the first core method will be used to check the same ability whether the ability already added too.
-module.exports = makeAbility(RefCountable, 'addRef')
+export const refCountable = createAbilityInjector(RefCountable, 'addRef')
+export default refCountable
 ```
 
 Do not forget to add the `"ability"` keyword to your package.json which means
@@ -138,7 +148,7 @@ class MyClass {
 }
 
 // someClassMethod would not be added to the class
-addRefAbility(MyClass, exclude: '@someClassMethod')
+addRefAbility(MyClass, {exclude: '@someClassMethod'})
 
 const my = new MyClass
 
@@ -148,76 +158,168 @@ my.free() // now destroy, print the 'destroy' here.
 
 ```
 
-More complicated example, you can see the [events-ex/src/eventable.coffee](https://github.com/snowyu/events-ex.js).
+More complicated example, you can see the [events-ex/src/eventable.js](https://github.com/snowyu/events-ex.js).
 
 ## Additional Abilities($abilities)
 
+The additional abilities injection feature provides a way to add more functionality to an injected ability by injecting other abilities that are dependent on it. This allows injected abilities to be more modular and flexible, and enables developers to compose complex behavior by combining multiple smaller abilities. The additional injection feature is especially useful when working with large, complex classes that require a lot of functionality, as it allows developers to break down the functionality into smaller, more manageable pieces that can be injected separately and combined together as needed.
+
 Another type of injection is the "**Additional Abilities**" that can be injected using the methods and classMethods parameters. These additional methods are necessary when modifying existing methods of the target class to call the old/original method to make a certain ability work.
 
-The injected methods are encapsulated in a closure. And the passed `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
+The additional abilities injection feature allows injected abilities to work together and support each other. When a dependent ability is injected, any additional abilities associated with it will also be injected. For example, if a target class has the `refCountable` ability injected and the `eventable` ability is also added, the `refCountable` ability will support events because it has been configured to inject additional methods that are compatible with the eventable ability.
 
-**Note**: The methods must be **non-enumerable members** of the target class(prototype).
+```ts
+import {AbilityInjectorOptions, abilitiesSym, AdditionalInjectionMode, createAbilityInjector} from 'custom-ability';
+
+class RefCountable {
+  static someClassMethod() {}
+
+  release() {
+      let result = --this.RefCount
+      if (result < 0) this.destroy()
+      return result
+  }
+
+  free() {
+    return this.release()
+  }
+
+  addRef() {
+    if (!isUndefined(this.RefCount))
+      ++this.RefCount
+    else
+      this.RefCount = 1
+  }
+}
+
+const injectorOptions: AbilityInjectorOptions = {
+  depends: {
+    Eventable: {
+      mode: AdditionalInjectionMode.target,
+      getOpts() {
+        // These methods will be injected when the eventable ability is injected
+        methods: {
+          release() {const self = this.self; this.super(); self.emit('release', self.RefCount);},
+          addRef() {const self = this.self; this.super(); self.emit('addRef', self.RefCount);},
+        }
+      }
+    }
+  }
+}
+
+export const refCountable = createAbilityInjector(RefCountable, 'addRef', injectorOptions)
+export default refCountable
+```
+
+In the provided code example, the `refCountable` ability is defined using `createAbilityInjector`, and the `injectorOptions` object is passed to configure it. The `injectorOptions` object specifies that when the `Eventable` ability is injected, additional methods (`release` and `addRef`) should be injected into the target class that are compatible with the `eventable` ability. This ensures that the refCountable ability can work with the `eventable` ability and support events.
+
+The injected methods are encapsulated in a closure. And the passed `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super` which is already bind to original `this`.
+
+
+`AdditionalInjectionMode` provides flexibility in how additional abilities are injected into a target class, allowing developers to choose the mode that best fits their use case. The all mode injects additional abilities into all classes in the inheritance chain that are related to the ability being injected, while the target mode only injects the additional abilities into the target class itself. This can be useful when injecting abilities with different dependencies or when multiple abilities need to be injected into the same class.
+
+
+AdditionalInjectionMode is an option for createAbilityInjector that controls how additional abilities are injected into a target class.
+
+* The `all` mode is the default mode, which injects the additional ability into all classes in the target class's inheritance chain that have a `$abilities` own property containing a key that matches the ability being injected. The ability being injected is also injected into the "base" class (the farthest class in the inheritance chain that has the `$abilities` own property) rather than the target class itself. This mode is useful when the injected abilities have dependencies on the ability being injected and need to be applied to all derived classes.
+* The `target` mode, on the other hand, only injects the additional ability into the target class itself, rather than all classes in the inheritance chain. This mode is useful when injecting abilities with dependency parameters, such as in the refCountable example code provided earlier, where the eventable ability should be injected with method overloads on the same class where refCountable is injected, rather than on the class where refCountable is defined.
+
+**Note**: The methods must be **non-enumerable members** of the target class.
+
+**Note**: Once an ability has been injected into a target class, excluding certain methods of that ability may cause some additional abilities to become ineffective if they depend on the excluded methods. Currently, by adding a `required` parameter to the `AdditionalAbility` object, which specifies a list of method names that the additional ability must have in order to be injected into the target class. If the target class does not have these required methods, the additional ability will not be injected.
+
+BREAK CHANGE(from v1 to v2):
+
+```ts
+import {AbilityOptions, abilitiesSym, createAbilityInjector} from 'custom-ability';
+
+function testableOpts(options?: AbilityOptions) {
+  return {
+    methods: {
+      additional: function() {}
+    }
+  };
+};
+
+
+// CAN NOT WORK NOW
+// My.prototype[abilitiesSym] = {
+//   MyAbility: testableOpts
+// };
+
+// Changed to this:
+My.prototype[abilitiesSym] = {
+  MyAbility: {getOpts: testableOpts}
+};
+
+```
 
 In order to make certain ability to work, you need to modify some methods
 of the class which could call the old(original) method. this time we need
-the "Additional Abilities" now. eg, the event-able ability to [AbstractObject](https://github.com/snowyu/abstract-object).
+the "Additional Abilities" now. eg, the event-able ability to [AbstractObject@v2](https://github.com/snowyu/abstract-object).
+
 We need to send a notification event when the state of the object changes(life cycle).
-So the event-able of [AbstractObject](https://github.com/snowyu/abstract-object)
+So the event-able of [AbstractObject@v2](https://github.com/snowyu/abstract-object)
 should be:
 
 ```js
-const eventable         = require('events-ex/eventable')
-const eventableOptions  = require('./eventable-options')
+// src/stateable.js
+import {AdditionalInjectionMode, createAbilityInjector} from 'custom-ability'
+import additionalOptions from './eventable-options'
 
-module.exports = function(aClass, aOptions){
-  return eventable(aClass, eventableOptions(aOptions))
-}
-```
+//...
 
-```js
-// eventable-options.js
-module.exports = function (aOptions){
-  if (!aOptions) aOptions = {}
-  if (!aOptions.methods) aOptions.methods = {}
-  extend( aOptions.methods, {
-    // override methods: (btw: classMethods to override the class methods)
-    setObjectState(value, emitted = true) {
-      // The injected methods are encapsulated in a closure.
-      // The `this` object inside the closure is not the original instance object, but `self`, and the original method is referred to as `super`.
-      self= this.self
-      this.super.setObjectState.call(self, value)
-      if (emitted) self.emit(value, self)
+const stateableOptions = {
+  depends: {
+    Eventable: {
+      mode: AdditionalInjectionMode.target,
+      getOpts: additionalOptions,
     }
-  })
-  ...
-  return aOptions
-  // more detail on [AbstractObject/src/eventable-options.coffee](https://github.com/snowyu/abstract-object)
+  }
 }
+
+export const stateable = createAbilityInjector(Stateable, 'objectState', stateableOptions)
+export default stateable
+
 ```
 
-But we wanna the original `eventable('events-ex/eventable')` knows the changes
-and use it automatically.
+```js
+// src/eventable-options.js
+export let MAX_LISTENERS = 2e308
+
+export function eventableOptions(aOptions) {
+  const result = {methods: {}, required: ['setMaxListeners', 'emit']}
+  const maxListeners = (aOptions && aOptions.maxListeners) || MAX_LISTENERS
+
+  extend(result.methods, {
+    // ...
+    setObjectState(value, emitted) {
+      if (emitted == null) {
+        emitted = true
+      }
+      const self = this.self
+      this["super"].call(self, value)
+      if (emitted) {
+        self.emit(value, self)
+      }
+    },
+    // ...
+  })
+}
+
+export default eventableOptions
+```
+
+Now, the MyClass(AbstractObject) will support the event ability when eventable the MyClass.
 
 ```js
-const eventable         = require 'events-ex/eventable'
+import {AbstractObject} from 'abstract-object'
+import {eventable} from 'events-ex'
 
 class MyClass extends AbstractObject {}
-// inherits MyClass, AbstractObject
 eventable(MyClass)
 ```
 
-you just do this on the AbstractObject:
-
-```js
-const AbstractObject = require('./lib/abstract-object')
-
-AbstractObject.$abilities = {
-  // "Eventable" is the AbilityClass name
-  Eventable: require('./lib/eventable-options')
-}
-
-module.exports = AbstractObject
-```
 
 ## API
 
@@ -228,10 +330,13 @@ This library provides a function customAbility that can inject the abilities of 
 Abilities can be defined as static or instance methods on the "mixin" class.
 
 ```js
-var customAbility = require('custom-ability')
+import {createAbilityInjector} from 'custom-ability'
+
 ```
 
-### customAbility(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false): WithAbilityFn
+### createAbilityInjector(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false, injectorOpts?: AbilityInjectorOptions): WithAbilityFn
+
+Creates a injector function that adds(injects) the ability to the target class based on the ability class.
 
 The injected abilities are provided by the `abilityClass` parameter, which is expected to be a class. The function takes the following parameters:
 
@@ -245,20 +350,15 @@ The injected abilities are provided by the `abilityClass` parameter, which is ex
 * `isGetClassFunction` *(boolean)*: the `AbilityClass` is a `function(aClass, aOptions)`
   to return the real `Ability Class` if true. defaults to false.
   * Whether abilityClass should be invoked with aClass and aOptions to get the actual ability class.
-
+* `injectorOpts` An optional injector options object, usage see the Additional Ability
 
 **return**
 
 * *(function)*: a function which can inject the ability to any class directly.
 
-the function customAbility should be modified its name.
-function customAbility(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false): WithAbilityFn
+The exported function returns the injector function (`WithAbilityFn(targetClass, options?: {include?: string|string[], exclude?: string|string[], methods? : {[name: string]: Function}, , classMethods? : {[name: string]: Function}}): targetClass`) that takes two parameters:
 
-The exported function returns another function (`WithAbilityFn(targetClass, options?: {include?: string|string[], exclude?: string|string[], methods? : {[name: string]: Function}, , classMethods? : {[name: string]: Function}}): targetClass`) that takes two parameters:
-
-This custom ability injection function has two arguments: `function(class[, options])`
-
-* `class`: the target class to be injected the ability.
+* `targetClass`: the target class to be injected the ability.
 * `options` *(object)*: an optional options object that can contain the following properties:
   * `include`*(array|string)*: only these methods will be added(injected) to the class
     * **note**: `@` prefix means class/static method.
@@ -280,6 +380,13 @@ This custom ability injection function has two arguments: `function(class[, opti
 * Export all helper functions on index.js
 * TypeScript supports
 * NodeJS >= 12
+* **broken change** The additional ability options total changed.
+* **broken change** Add new injectorOpts option to createAbilityInjector for optional depends AdditionalAbility
+* **broken change** Support multi AdditionalAbilities on the same ability. The AdditionalAbity option is total changed. see AdditionalAbility type
+* fix: should inject the static methods on the same class for ES6 Class and inherits-ex supports static member inheritance now
+* refactor(**broken change**): the injector will return the injected class if already injected
+* fix: should not duplicate inject additional abilities on base class
+* fix: can not inject all inherited AdditionalAbility on ES6 Class
 
 ### V1.6.2
 
