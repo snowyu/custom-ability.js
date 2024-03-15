@@ -25,7 +25,7 @@ An optional object mapping method names to static functions to be added to the t
 
 #### Defined in
 
-[custom-ability.ts:116](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L116)
+[custom-ability.ts:116](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L116)
 
 ___
 
@@ -37,7 +37,7 @@ An optional list of method names to exclude.
 
 #### Defined in
 
-[custom-ability.ts:108](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L108)
+[custom-ability.ts:108](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L108)
 
 ___
 
@@ -49,7 +49,7 @@ An optional id for AdditionalAbility option
 
 #### Defined in
 
-[custom-ability.ts:96](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L96)
+[custom-ability.ts:96](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L96)
 
 ___
 
@@ -61,7 +61,7 @@ An optional list of method names to include.
 
 #### Defined in
 
-[custom-ability.ts:104](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L104)
+[custom-ability.ts:104](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L104)
 
 ___
 
@@ -73,7 +73,7 @@ An optional object mapping method names to functions to be added to the target c
 
 #### Defined in
 
-[custom-ability.ts:112](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L112)
+[custom-ability.ts:112](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L112)
 
 ___
 
@@ -85,4 +85,4 @@ The additional injection mode
 
 #### Defined in
 
-[custom-ability.ts:100](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L100)
+[custom-ability.ts:100](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L100)
