@@ -20,4 +20,4 @@ The optional depends abilities which can work together
 
 #### Defined in
 
-[custom-ability.ts:162](https://github.com/snowyu/custom-ability.js/blob/3824d8e/src/custom-ability.ts#L162)
+[custom-ability.ts:162](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L162)

@@ -39,7 +39,7 @@ the Additional Ability options if exists
 
 #### Defined in
 
-[custom-ability.ts:142](https://github.com/snowyu/custom-ability.js/blob/3824d8e/src/custom-ability.ts#L142)
+[custom-ability.ts:142](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L142)
 
 ___
 
@@ -51,7 +51,7 @@ the AdditionalAbilityOptions ID
 
 #### Defined in
 
-[custom-ability.ts:127](https://github.com/snowyu/custom-ability.js/blob/3824d8e/src/custom-ability.ts#L127)
+[custom-ability.ts:127](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L127)
 
 ___
 
@@ -63,7 +63,7 @@ the Additional Injection Mode
 
 #### Defined in
 
-[custom-ability.ts:131](https://github.com/snowyu/custom-ability.js/blob/3824d8e/src/custom-ability.ts#L131)
+[custom-ability.ts:131](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L131)
 
 ___
 
@@ -75,4 +75,4 @@ the list of required methods
 
 #### Defined in
 
-[custom-ability.ts:135](https://github.com/snowyu/custom-ability.js/blob/3824d8e/src/custom-ability.ts#L135)
+[custom-ability.ts:135](https://github.com/snowyu/custom-ability.js/blob/0309eb8/src/custom-ability.ts#L135)
