@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.0-alpha.5](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2024-03-15)
+
+
+### Bug Fixes
+
+* webpack5 Module parse failed: 'import' and 'export' may appear only with 'sourceType: module' ([0309eb8](https://github.com/snowyu/custom-ability.js/commit/0309eb8c2431492b6d466f8e80f74f32f94c783b))
+
 ## [2.0.0-alpha.4](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.3...v2.0.0-alpha.4) (2023-06-12)
 
 
