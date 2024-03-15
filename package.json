@@ -1,6 +1,6 @@
 {
   "name": "custom-ability",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "make custom ability more easy. generate the ability which can be added to any class directly.",
   "homepage": "https://github.com/snowyu/custom-ability.js",
   "source": "./src/index.ts",
