@@ -19,7 +19,7 @@
     "build.ts": "npm run build.ts.cjs && npm run build.ts.mjs",
     "build.ts.d": "tsc --declaration --emitDeclarationOnly --outDir lib",
     "build.ts.cjs": "tsc --module commonjs -outDir lib",
-    "build.ts.mjs": "tsc --moduleResolution nodenext --module es2022 -outDir lib/esm",
+    "build.ts.mjs": "tsc --moduleResolution nodenext --module es2022 -outDir lib/esm;node script/prepend-module.js lib/esm/index.js",
     "clean": "rm -fr web docs lib",
     "clean.doc": "rm -fr web docs",
     "clean.ts": "rm -fr lib/*.d.ts",
@@ -36,8 +36,8 @@
     "node": ">=12"
   },
   "dependencies": {
-    "inherits-ex": "^2.1.0-alpha.11",
-    "util-ex": "^2.0.0-alpha.8"
+    "inherits-ex": "^2.1.0-alpha.12",
+    "util-ex": "^2.0.0-alpha.9"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.38.5",
