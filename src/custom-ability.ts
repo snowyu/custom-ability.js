@@ -160,6 +160,7 @@ export interface AbilityInjectorOptions {
    * The optional depends abilities which can work together
    */
   depends?: AdditionalAbilities;
+  afterInjection?: (targetClass: Function, options?: AbilityOptions) => void;
 }
 
 /**
@@ -219,6 +220,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
     isGetClassFunc = undefined;
   }
   const vDepends = injectorOpts && injectorOpts.depends;
+  const afterInjection = injectorOpts && injectorOpts.afterInjection;
 
   function abilityFn(aClass, aOptions?) {
     let AbilityClass = abilityClass;
@@ -247,7 +249,9 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
         }
       }
 
-      if (!(vHasCoreMethod || ($abilities && $abilities['$' + vName]))) {
+      const needInjection = !(vHasCoreMethod || ($abilities && $abilities['$' + vName]))
+
+      if (needInjection) {
         let vIncludeMembers!: Array<string>
         let vFilterMembers!: (name: string) => boolean
         const vHasIncludeOptions = aOptions && (aOptions.include || aOptions.exclude)
@@ -354,6 +358,8 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
           }
         })
       }
+
+      if (needInjection && typeof afterInjection === 'function') { afterInjection(aClass, aOptions) }
     } else {
       aClass = AbilityClass;
     }
