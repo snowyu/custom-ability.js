@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.0-alpha.7](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.6...v2.0.0-alpha.7) (2024-07-20)
+
+
+### Features
+
+* add afterInjection callback option ([14fa78d](https://github.com/snowyu/custom-ability.js/commit/14fa78d3fd8844c7fb59139ff397fc27e7451dcd))
+
 ## [2.0.0-alpha.6](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.5...v2.0.0-alpha.6) (2024-03-15)
 
 ## [2.0.0-alpha.5](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2024-03-15)
