@@ -14,6 +14,9 @@
     "src",
     "lib"
   ],
+  "engines": {
+    "node": ">=12"
+  },
   "scripts": {
     "build": "npm run build.ts && npm run doc.md",
     "build.ts": "npm run build.ts.cjs && npm run build.ts.mjs",
@@ -31,9 +34,6 @@
     "release": "npm run clean && npm run build && git add docs && git ci -m 'docs: update API docs' && npx commit-and-tag-version -s",
     "release.alpha": "npm run release -- --prerelease alpha",
     "test": "mocha"
-  },
-  "engines": {
-    "node": ">=12"
   },
   "dependencies": {
     "inherits-ex": "^2.1.0-alpha.12",
