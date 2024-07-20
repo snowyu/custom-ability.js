@@ -8,9 +8,35 @@ The ability injector options
 
 ### Properties
 
+- [afterInjection](AbilityInjectorOptions.md#afterinjection)
 - [depends](AbilityInjectorOptions.md#depends)
 
 ## Properties
+
+### afterInjection
+
+• `Optional` **afterInjection**: (`targetClass`: `Function`, `options?`: [`AbilityOptions`](AbilityOptions.md)) => `void`
+
+#### Type declaration
+
+▸ (`targetClass`, `options?`): `void`
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `targetClass` | `Function` |
+| `options?` | [`AbilityOptions`](AbilityOptions.md) |
+
+##### Returns
+
+`void`
+
+#### Defined in
+
+[custom-ability.ts:163](https://github.com/snowyu/custom-ability.js/blob/80c077a/src/custom-ability.ts#L163)
+
+___
 
 ### depends
 
@@ -20,4 +46,4 @@ The optional depends abilities which can work together
 
 #### Defined in
 
-[custom-ability.ts:162](https://github.com/snowyu/custom-ability.js/blob/52f5393/src/custom-ability.ts#L162)
+[custom-ability.ts:162](https://github.com/snowyu/custom-ability.js/blob/80c077a/src/custom-ability.ts#L162)
