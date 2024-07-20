@@ -133,35 +133,28 @@ describe('customAbility with es6', function() {
     MyClass.should.have.ownProperty('emptyMethod', emptyMethod)
   });
   it('could use getAbilityClass', function() {
-    var My, getAbilityClass, result, testable1;
-    My = class My {};
-    getAbilityClass = function(aClass) {
+    const My = class My {};
+    const getAbilityClass = function(aClass) {
       return MyAbility;
     };
-    testable1 = createAbilityInjector(getAbilityClass, true);
-    result = testable1(My);
+    const testable1 = createAbilityInjector(getAbilityClass, true);
+    const result = testable1(My);
     result.should.be.equal(My);
     return myAbilityCheck(result);
   });
   it('could get AbilityClass when no aClass passing', function() {
-    var My, testable1;
-    testable1 = createAbilityInjector(MyAbility);
-    My = testable1();
+    const testable1 = createAbilityInjector(MyAbility);
+    const My = testable1();
     return My.should.be.equal(MyAbility);
   });
   it('could no inject if have already static coreMethod', function() {
-    var My, testable1;
-    testable1 = createAbilityInjector(MyAbility, '@cone');
-    My = (function() {
-      class My {
-        static cone: number;
-};
+    const testable1 = createAbilityInjector(MyAbility, '@cone');
+    class My {
+      static cone: number;
+    };
 
-      My.cone = 12;
+    My.cone = 12;
 
-      return My;
-
-    }).call(this);
     testable1(My);
     return My.should.have.property('cone', 12);
   });
