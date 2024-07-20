@@ -285,12 +285,9 @@ describe('customAbility with es6', function() {
     return delete MyAbility.class;
   });
   it('should get proper aClass in getClass function to make ability ', function() {
-    let My, MyA, k, my, ref, testable1, v;
-    MyA = undefined;
+    let MyA;
     function fn(aClass, aOptions) {
-      var MyAbility1;
-      return MyA = MyAbility1 = (function() {
-        class MyAbility1 {
+       class MyAbility1 {
           emit: sinon.SinonSpy<any[], any>;
           one: any;
           static count: number;
@@ -304,57 +301,52 @@ describe('customAbility with es6', function() {
         });
 
         MyAbility1.count = 1;
-
+        MyA = MyAbility1
         return MyAbility1;
-
-      }).call(this);
     };
-    testable1 = createAbilityInjector(fn, 'emit', true);
-    My = function() {};
+    const testable1 = createAbilityInjector(fn, 'emit', true);
+    const My = function() {};
     testable1(My).should.be.equal(My);
-    for (k in MyA) {
-      v = MyA[k];
+    for (const k in MyA) {
+      const v = MyA[k];
       v.should.be.equal(My[k]);
     }
-    ref = MyA.prototype;
-    for (k in ref) {
-      v = ref[k];
+    const ref = MyA.prototype;
+    for (const k in ref) {
+      const v = ref[k];
       v.should.be.equal(My.prototype[k]);
     }
-    my = new My();
+    const my = new My();
     my.one();
-    return my.one.should.be.calledOnce;
+    my.one.should.be.calledOnce;
   });
   it('should only include methods', function() {
-    var My, keys;
-    My = function() {};
+    const My = function() {};
     testable(My, {
       include: ['one', '@ctwo']
     });
-    keys = Object.keys(My);
+    let keys = Object.keys(My);
     assert.deepEqual(keys, ['ctwo']);
     keys = Object.keys(My.prototype);
     assert.deepEqual(keys, ['one', 'emit']);
   });
   it('should include one method as string', function() {
-    var My, keys;
-    My = function() {};
+    const My = function() {};
     testable(My, {
       include: 'two'
     });
-    keys = Object.keys(My);
+    let keys = Object.keys(My);
     assert.deepEqual(keys, []);
     keys = Object.keys(My.prototype);
     keys.sort();
     assert.deepEqual(keys, ['emit', 'two'].sort());
   });
   it('should exclude methods', function() {
-    var My, keys;
-    My = function() {};
+    const My = function() {};
     testable(My, {
       exclude: ['one', 'two', '@ctwo']
     });
-    keys = Object.keys(My);
+    let keys = Object.keys(My);
     assert.deepEqual(keys, ['cone']);
     My.should.not.have.ownProperty('ctwo');
     keys = Object.keys(My.prototype);
@@ -362,22 +354,20 @@ describe('customAbility with es6', function() {
     assert.deepEqual(keys, ['emit', 'three'].sort());
   });
   it('should exclude one method', function() {
-    var My, keys;
-    My = function() {};
+    const My = function() {};
     testable(My, {
       exclude: 'one'
     });
-    keys = Object.keys(My.prototype).sort();
+    const keys = Object.keys(My.prototype).sort();
     assert.deepEqual(keys, ['emit', 'two', 'three'].sort());
   });
   it('should include and exclude methods', function() {
-    var My, keys;
-    My = function() {};
+    const My = function() {};
     testable(My, {
       include: ['one', 'three'],
       exclude: ['emit']
     });
-    keys = Object.keys(My.prototype).sort();
+    const keys = Object.keys(My.prototype).sort();
     assert.deepEqual(keys, ['one', 'two', 'three', 'emit'].sort());
   });
   it('should inject methods', function() {
