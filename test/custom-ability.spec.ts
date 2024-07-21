@@ -362,6 +362,25 @@ describe('customAbility', function() {
     oldExec.should.be.calledOnce;
     oldExec.should.be.calledWith(1, 2, 3);
   });
+  it('should inject class methods in parent', function() {
+    var My, MyRoot, newExec, oldExec;
+    MyRoot = function() {};
+    My = function() {};
+    inherits(My, MyRoot);
+    MyRoot.exec = oldExec = sinon.spy(function() {});
+    testable(My, {
+      classMethods: {
+        exec: newExec = sinon.spy(function() {
+          this['super'].apply(this.self, arguments);
+        })
+      }
+    });
+    My.exec(1, 2, 3);
+    newExec.should.be.calledOnce;
+    newExec.should.be.calledWith(1, 2, 3);
+    oldExec.should.be.calledOnce;
+    oldExec.should.be.calledWith(1, 2, 3);
+  });
   it('should not inject methods twice', function() {
     var My, Root, my, newExec, oldExec;
     newExec = 0;

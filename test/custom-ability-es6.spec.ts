@@ -385,9 +385,14 @@ describe('customAbility with es6', function() {
     assert.equal(newExec, true, 'should execute the new func');
   });
   it('should inject class methods', function() {
-    var My, newExec, oldExec;
-    My = function() {};
-    My.exec = oldExec = sinon.spy(function() {});
+    let newExec;
+
+    const oldExec = sinon.spy(function() {})
+
+    class My {
+      static exec: any = oldExec;
+    }
+
     testable(My, {
       classMethods: {
         exec: newExec = sinon.spy(function() {
@@ -401,6 +406,32 @@ describe('customAbility with es6', function() {
     oldExec.should.be.calledOnce;
     oldExec.should.be.calledWith(1, 2, 3);
   });
+
+  it('should inject class method in parent', function() {
+    let newExec;
+
+    const oldExec = sinon.spy(function() {})
+
+    class MyRoot {
+      static exec: any = oldExec;
+    }
+
+    class My extends MyRoot { }
+
+    testable(My, {
+      classMethods: {
+        exec: newExec = sinon.spy(function() {
+          this['super'].apply(this.self, arguments);
+        })
+      }
+    });
+    My.exec(1, 2, 3);
+    newExec.should.be.calledOnce;
+    newExec.should.be.calledWith(1, 2, 3);
+    oldExec.should.be.calledOnce;
+    oldExec.should.be.calledWith(1, 2, 3);
+  });
+
   //assert.equal oldExec, true, 'should execute the original func'
   //assert.equal newExec, true, 'should execute the new func'
   it('should not inject methods twice', function() {
