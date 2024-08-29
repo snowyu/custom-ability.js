@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.0](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.7...v2.0.0) (2024-08-29)
+
 ## [2.0.0-alpha.7](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.6...v2.0.0-alpha.7) (2024-07-20)
 
 
