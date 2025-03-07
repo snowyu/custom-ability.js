@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.1](https://github.com/snowyu/custom-ability.js/compare/v2.0.0...v2.0.1) (2025-03-07)
+
+
+### Bug Fixes
+
+* ts createAbilityInjector declarations ([998ff35](https://github.com/snowyu/custom-ability.js/commit/998ff35dae1a05f29b311060ab3471a162f7dee4))
+
 ## [2.0.0](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.7...v2.0.0) (2024-08-29)
 
 ## [2.0.0-alpha.7](https://github.com/snowyu/custom-ability.js/compare/v2.0.0-alpha.6...v2.0.0-alpha.7) (2024-07-20)
