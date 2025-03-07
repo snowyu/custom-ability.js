@@ -114,6 +114,7 @@ export interface AbilityOptions {
    * An optional object mapping method names to static functions to be added to the target class.
    */
   classMethods?: Record<string, Function>
+  [name: string]: any
 }
 
 /**
@@ -163,6 +164,19 @@ export interface AbilityInjectorOptions {
   afterInjection?: (targetClass: Function, options?: AbilityOptions) => void;
 }
 
+type SafeInstanceType<T> = T extends new (...args: any[]) => any ? InstanceType<T> : T;
+
+type ClassEx =
+  | Function
+  | ({new (...args: any[])})
+;
+type EnhancedClass<T extends ClassEx, A extends ClassEx> =
+  // Static type: merge the static methods of T and A
+  (T & A) &
+  // Instance type: merge the instance methods of T and A
+  SafeInstanceType<T> & SafeInstanceType<A>
+;
+
 /**
  * A function that adds(injects) the ability of a specified ability class to a target class.
  *
@@ -173,7 +187,12 @@ export interface AbilityInjectorOptions {
  * @returns {Function} - An injected target class that takes a class and adds the ability to it using the specified
  *                       options.
  */
-export type AbilityFn = (targetClass?: Function, options?: AbilityOptions) => Function;
+type ClassAbilityFn<A extends ClassEx> = <
+  T extends ClassEx
+>(
+  targetClass?: T,
+  options?: AbilityOptions
+) => EnhancedClass<T, A>;
 
 /**
  * Creates a function that adds(injects) the ability to the target class based on the ability class.
@@ -186,10 +205,10 @@ export type AbilityFn = (targetClass?: Function, options?: AbilityOptions) => Fu
  *                    properties and methods.
  *                    The returned function injects the abilities into the target class and returns the modified class.
  */
-export function createAbilityInjector(abilityClass: Function, isGetClassFunc?: boolean, injectorOpts?: AbilityInjectorOptions): AbilityFn;
-export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string|string[], isGetClassFunc?: boolean, injectorOpts?: AbilityInjectorOptions): AbilityFn;
-export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string|string[], injectorOpts?: AbilityInjectorOptions): AbilityFn;
-export function createAbilityInjector(abilityClass: Function, injectorOpts?: AbilityInjectorOptions): AbilityFn;
+export function createAbilityInjector<A extends ClassEx>(abilityClass: A, isGetClassFunc?: boolean, injectorOpts?: AbilityInjectorOptions): ClassAbilityFn<A>;
+export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreMethod?: string|string[], isGetClassFunc?: boolean, injectorOpts?: AbilityInjectorOptions): ClassAbilityFn<A>;
+export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreMethod?: string|string[], injectorOpts?: AbilityInjectorOptions): ClassAbilityFn<A>;
+export function createAbilityInjector<A extends ClassEx>(abilityClass: A, injectorOpts?: AbilityInjectorOptions): ClassAbilityFn<A>;
 /**
  * Creates a function that adds(injects) the ability to the target class based on the ability class.
  *
@@ -205,7 +224,7 @@ export function createAbilityInjector(abilityClass: Function, injectorOpts?: Abi
  *                    properties and methods.
  *                    The returned function injects the abilities into the target class and returns the modified class.
  */
-export function createAbilityInjector(abilityClass: Function, aCoreMethod?: string|string[]|boolean|AbilityInjectorOptions, isGetClassFunc?: boolean|AbilityInjectorOptions, injectorOpts?: AbilityInjectorOptions): AbilityFn {
+export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreMethod?: string|string[]|boolean|AbilityInjectorOptions, isGetClassFunc?: boolean|AbilityInjectorOptions, injectorOpts?: AbilityInjectorOptions): ClassAbilityFn<A> {
   if (typeof aCoreMethod === 'boolean') {
     injectorOpts = isGetClassFunc as AbilityInjectorOptions;
     isGetClassFunc = aCoreMethod;
@@ -225,7 +244,7 @@ export function createAbilityInjector(abilityClass: Function, aCoreMethod?: stri
   function abilityFn(aClass, aOptions?) {
     let AbilityClass = abilityClass;
     if (isGetClassFunc === true) {
-      AbilityClass = abilityClass(aClass, aOptions);
+      AbilityClass = (abilityClass as Function)(aClass, aOptions);
     }
     if (!AbilityClass) {
       throw new TypeError('no abilityClass');
