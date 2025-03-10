@@ -81,6 +81,30 @@ describe('customAbility with es6', function() {
     MyClass.should.have.ownProperty('coreAbilityClassMethod')
 
   });
+
+  it('should override exists method', function() {
+    class MyFeature {
+      static additionalClassMethod: () => void;
+      static coreAbilityClassMethod(){};
+      coreAbilityMethod(){};
+      additionalAbilityMethod(){};
+    }
+    MyFeature.additionalClassMethod = function() {}
+
+    const addFeatureTo = createAbilityInjector(MyFeature, ['coreAbilityMethod', '@coreAbilityClassMethod']);
+
+    interface MyClass extends MyFeature {}
+    class MyClass {
+      coreAbilityMethod() {}
+    }
+    // inject the static and instance methods to the MyClass.
+    addFeatureTo(MyClass);
+    MyClass.should.have.ownProperty('coreAbilityClassMethod')
+    expect((MyClass as any).coreAbilityClassMethod).to.be.eq(MyFeature.coreAbilityClassMethod)
+    expect(MyClass.prototype.coreAbilityMethod).to.be.eq(MyFeature.prototype.coreAbilityMethod)
+    expect(MyClass.prototype.additionalAbilityMethod).to.be.eq(MyFeature.prototype.additionalAbilityMethod)
+  });
+
   it('should add non-enumerable attributes', function() {
     class MyFeature {
       static additionalClassMethod: () => void;
