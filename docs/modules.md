@@ -51,7 +51,7 @@ The additional injection mode
 
 #### Defined in
 
-[custom-ability.ts:34](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L34)
+[custom-ability.ts:34](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L34)
 
 ___
 
@@ -65,7 +65,7 @@ A symbol used to mark a class's additional ability whether injected
 
 #### Defined in
 
-[custom-ability.ts:29](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L29)
+[custom-ability.ts:29](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L29)
 
 ___
 
@@ -79,7 +79,7 @@ A symbol used to mark a class's abilities
 
 #### Defined in
 
-[custom-ability.ts:22](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L22)
+[custom-ability.ts:22](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L22)
 
 ## Functions
 
@@ -113,7 +113,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:208](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L208)
+[custom-ability.ts:215](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L215)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `isGetClassFunc?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -130,9 +130,9 @@ Creates a function that adds(injects) the ability to the target class based on t
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `abilityClass` | `A` | The ability class to inject into the target class. |
-| `aCoreMethod?` | `string` \| `string`[] | An optional parameter that specifies the core methods that the ability class must have. This is a minimum set of methods required for the ability to be considered injected. Core methods are defined in the ability class, and can be static or instance methods. If a core method is a static method, it must be prefixed with the "@" symbol. |
-| `isGetClassFunc?` | `boolean` | An optional parameter that indicates whether abilityClass should be invoked with aClass and aOptions to get the actual ability class. defaults to false |
-| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object |
+| `aCoreMethod?` | `string` \| `string`[] | An optional parameter that specifies the core methods that the ability class must have. This is a minimum set of methods required for the ability to be considered injected. Core methods are defined in the ability class, and can be static or instance methods. If a core method is a static method, it must be prefixed with the "@" symbol. Note: If a core method is renamed via `options.rename`, the detection logic will automatically use the new name to check for existence. |
+| `isGetClassFunc?` | `boolean` | An optional parameter that indicates whether abilityClass should be invoked with aClass and aOptions to get the actual ability class. defaults to false. When true, abilityClass is treated as a factory: (targetClass, options) => RealAbilityClass. |
+| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object for defining dependencies (AdditionalAbilities). |
 
 #### Returns
 
@@ -144,7 +144,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:209](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L209)
+[custom-ability.ts:216](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L216)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -161,8 +161,8 @@ Creates a function that adds(injects) the ability to the target class based on t
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `abilityClass` | `A` | The ability class to inject into the target class. |
-| `aCoreMethod?` | `string` \| `string`[] | An optional parameter that specifies the core methods that the ability class must have. This is a minimum set of methods required for the ability to be considered injected. Core methods are defined in the ability class, and can be static or instance methods. If a core method is a static method, it must be prefixed with the "@" symbol. |
-| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object |
+| `aCoreMethod?` | `string` \| `string`[] | An optional parameter that specifies the core methods that the ability class must have. This is a minimum set of methods required for the ability to be considered injected. Core methods are defined in the ability class, and can be static or instance methods. If a core method is a static method, it must be prefixed with the "@" symbol. Note: If a core method is renamed via `options.rename`, the detection logic will automatically use the new name to check for existence. |
+| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object for defining dependencies (AdditionalAbilities). |
 
 #### Returns
 
@@ -174,7 +174,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:210](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L210)
+[custom-ability.ts:217](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L217)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -191,7 +191,7 @@ Creates a function that adds(injects) the ability to the target class based on t
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `abilityClass` | `A` | The ability class to inject into the target class. |
-| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object |
+| `injectorOpts?` | [`AbilityInjectorOptions`](interfaces/AbilityInjectorOptions.md) | An optional injector options object for defining dependencies (AdditionalAbilities). |
 
 #### Returns
 
@@ -203,7 +203,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:211](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/custom-ability.ts#L211)
+[custom-ability.ts:218](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L218)
 
 ___
 
@@ -224,7 +224,7 @@ ___
 
 #### Defined in
 
-[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/has-ability-on-parent.ts#L3)
+[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/has-ability-on-parent.ts#L3)
 
 ___
 
@@ -245,7 +245,7 @@ ___
 
 #### Defined in
 
-[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/injected-on-parent.ts#L3)
+[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/injected-on-parent.ts#L3)
 
 ___
 
@@ -267,4 +267,4 @@ ___
 
 #### Defined in
 
-[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/5cf28e6/src/require.ts#L9)
+[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/require.ts#L9)

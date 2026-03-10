@@ -100,10 +100,10 @@ class RefCountable {
   // the class methods if any:
   static someClassMethod() {}
 
-  //define the instance methods here:
+  // define the instance methods here:
   release() {
-      let result = --this.RefCount
-      if (result < 0) this.destroy()
+      const result = --this.RefCount
+      if (result < 0) {this.destroy()}
       return result
   }
 
@@ -132,10 +132,12 @@ the ability power with it.
 
 ```js
 // package.json
-"keywords": [
-  "ability",
-  ...
-],
+{
+  "keywords": [
+    "ability",
+    // ...
+  ],
+}
 ```
 
 Do not forget to add the `"ability.js"` file on your package root folder too.
@@ -171,14 +173,14 @@ Another type of injection is the "**Additional Abilities**" that can be injected
 The additional abilities injection feature allows injected abilities to work together and support each other. When a dependent ability is injected, any additional abilities associated with it will also be injected. For example, if a target class has the `refCountable` ability injected and the `eventable` ability is also added, the `refCountable` ability will support events because it has been configured to inject additional methods that are compatible with the eventable ability.
 
 ```ts
-import {AbilityInjectorOptions, abilitiesSym, AdditionalInjectionMode, createAbilityInjector} from 'custom-ability';
+import {AbilityInjectorOptions, AdditionalInjectionMode, abilitiesSym, createAbilityInjector} from 'custom-ability';
 
 class RefCountable {
   static someClassMethod() {}
 
   release() {
-      let result = --this.RefCount
-      if (result < 0) this.destroy()
+      const result = --this.RefCount
+      if (result < 0) {this.destroy()}
       return result
   }
 
@@ -199,10 +201,12 @@ const injectorOptions: AbilityInjectorOptions = {
     Eventable: {
       mode: AdditionalInjectionMode.target,
       getOpts() {
-        // These methods will be injected when the eventable ability is injected
-        methods: {
-          release() {const self = this.self; this.super(); self.emit('release', self.RefCount);},
-          addRef() {const self = this.self; this.super(); self.emit('addRef', self.RefCount);},
+        return {
+          // These methods will be injected when the eventable ability is injected
+          methods: {
+            release() {const self = this.self; this.super(); self.emit('release', self.RefCount);},
+            addRef() {const self = this.self; this.super(); self.emit('addRef', self.RefCount);},
+          }
         }
       }
     }
@@ -236,7 +240,7 @@ import {AbilityOptions, abilitiesSym, createAbilityInjector} from 'custom-abilit
 function testableOpts(options?: AbilityOptions) {
   return {
     methods: {
-      additional: function() {}
+      additional() {}
     }
   };
 };
@@ -266,7 +270,7 @@ should be:
 import {AdditionalInjectionMode, createAbilityInjector} from 'custom-ability'
 import additionalOptions from './eventable-options'
 
-//...
+// ...
 
 const stateableOptions = {
   depends: {
@@ -284,7 +288,7 @@ export default stateable
 
 ```js
 // src/eventable-options.js
-export let MAX_LISTENERS = 2e308
+export const MAX_LISTENERS = 2e30
 
 export function eventableOptions(aOptions) {
   const result = {methods: {}, required: ['setMaxListeners', 'emit']}
@@ -297,7 +301,7 @@ export function eventableOptions(aOptions) {
         emitted = true
       }
       const self = this.self
-      this["super"].call(self, value)
+      this.super.call(self, value)
       if (emitted) {
         self.emit(value, self)
       }
@@ -369,6 +373,105 @@ The exported function returns the injector function (`WithAbilityFn(targetClass,
       * use `this.super()` to call the original method.
       * `this.self` is the original `this` object.
   * `classMethods` *(object)*: hooked class methods to the class, it's the same usage as the `methods`.
+  * `rename` *(object)*: an optional object mapping original method names to new method names to be added to the target class.
+    * key: the original method name in the ability class.
+    * value: the new method name to be used in the target class.
+    * **Note**: The new method name **must not exist** in the target class (including its inheritance chain). If it exists, an error will be thrown.
+    * **Note**: The original method name will be **automatically excluded** from the injection.
+    * **Note**: `@` prefix means class/static method.
+
+## Method Renaming
+
+Sometimes, an ability class might have a method name that conflicts with a method name already used in the target class, but for a completely different purpose. In such cases, you can use the `rename` option to inject the ability's method under a different name, thereby avoiding the conflict and keeping the target class's original method intact.
+
+### How it works
+
+1. **Isolation**: When you specify a rename mapping, the original method is moved to the new name during injection.
+2. **Safety First**: The library checks if the new name already exists in the target class (including all parent classes). If it does, a `Rename failed` error is thrown to prevent accidental overwriting or unexpected behavior.
+3. **Auto-Exclusion**: The original method name is automatically added to the `exclude` list. This ensures that the ability's method doesn't get injected twice (once under the original name and once under the new name) and that the target class's own method of the same name remains untouched.
+4. **Core Method Support**: You can even rename a "core method". The library's duplicate injection detection will correctly use the new name to determine if the ability has already been added.
+
+### Example: Renaming Instance Methods
+
+Suppose you have an ability with an `init` method, but your target class already has its own `init` logic that is unrelated to the ability.
+
+```javascript
+import { createAbilityInjector } from 'custom-ability'
+
+class MyAbility {
+  init() {
+    console.log('Ability initialized')
+  }
+}
+
+const addAbility = createAbilityInjector(MyAbility)
+
+class MyClass {
+  init() {
+    console.log('MyClass initialized')
+  }
+}
+
+// Rename Ability's 'init' to 'abilityInit'
+addAbility(MyClass, {
+  rename: {
+    init: 'abilityInit'
+  }
+})
+
+const instance = new MyClass()
+instance.init()         // Output: "MyClass initialized"
+instance.abilityInit()  // Output: "Ability initialized"
+// instance.init is NOT overloaded; it is the original method.
+```
+
+### Example: Renaming Static Methods
+
+You can use the `@` prefix to rename static (class) methods.
+
+```javascript
+class MyAbility {
+  static setup() { console.log('Ability static setup') }
+}
+
+const addAbility = createAbilityInjector(MyAbility)
+
+class MyClass {
+  static setup() { console.log('MyClass static setup') }
+}
+
+addAbility(MyClass, {
+  rename: {
+    '@setup': '@abilitySetup'
+  }
+})
+
+MyClass.setup()        // Output: "MyClass static setup"
+MyClass.abilitySetup() // Output: "Ability static setup"
+```
+
+### Example: Renaming Core Methods
+
+Renaming a core method is fully supported and safe.
+
+```javascript
+class MyAbility {
+  emit() { /* ... */ }
+}
+// 'emit' is a core method
+const addAbility = createAbilityInjector(MyAbility, 'emit')
+
+class MyClass {}
+
+addAbility(MyClass, {
+  rename: { emit: 'myEmit' }
+})
+
+// Detection still works: calling addAbility again will do nothing
+// because it detects 'myEmit' (the renamed core method) already exists.
+addAbility(MyClass, { rename: { emit: 'otherEmit' } })
+// 'otherEmit' will NOT be added.
+```
 
 ## Specification
 
@@ -417,16 +520,18 @@ The exported function returns the injector function (`WithAbilityFn(targetClass,
 
   ```js
   const makeAbility = require('custom-ability')
+
   class Feature {
     // inject to the init method on target class
     $init() {
       const Super = this.super
       const that = this.self || this
       if (Super) {
-        if (Super.apply(that, arguments) === 'ok') return
+        if (Super.apply(that, arguments) === 'ok') {return}
       }
       that._init.apply(that, arguments)
     }
+
     _init() {console.log('feature init')}
   }
   Feature.prototype.init = function() {this._init.apply(this, arguments)}
@@ -436,7 +541,7 @@ The exported function returns the injector function (`WithAbilityFn(targetClass,
     init(doInitFeature = true) {
       // the my init procedure
       console.log('my init')
-      if (!doInitFeature) return 'ok'
+      if (!doInitFeature) {return 'ok'}
     }
   }
   addFeatureTo(My)
