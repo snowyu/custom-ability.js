@@ -114,6 +114,13 @@ export interface AbilityOptions {
    * An optional object mapping method names to static functions to be added to the target class.
    */
   classMethods?: Record<string, Function>
+  /**
+   * An optional object mapping original method names to new method names to be added to the target class.
+   * The new method name must not exist in the target class.
+   * The original method name will be automatically excluded from injection.
+   * Note: "@" prefix means class/static method.
+   */
+  rename?: Record<string, string>
   [name: string]: any
 }
 
@@ -217,9 +224,12 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, inject
  *                    This is a minimum set of methods required for the ability to be considered injected.
  *                    Core methods are defined in the ability class, and can be static or instance methods.
  *                    If a core method is a static method, it must be prefixed with the "@" symbol.
+ *                    Note: If a core method is renamed via `options.rename`, the detection logic will 
+ *                    automatically use the new name to check for existence.
  * @param isGetClassFunc An optional parameter that indicates whether abilityClass should be invoked
- *                    with aClass and aOptions to get the actual ability class. defaults to false
- * @param injectorOpts An optional injector options object
+ *                    with aClass and aOptions to get the actual ability class. defaults to false.
+ *                    When true, abilityClass is treated as a factory: (targetClass, options) => RealAbilityClass.
+ * @param injectorOpts An optional injector options object for defining dependencies (AdditionalAbilities).
  * @returns Another function that accepts the target class and options to include or exclude specific
  *                    properties and methods.
  *                    The returned function injects the abilities into the target class and returns the modified class.
@@ -229,7 +239,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
     injectorOpts = isGetClassFunc as AbilityInjectorOptions;
     isGetClassFunc = aCoreMethod;
     aCoreMethod = undefined;
-  } else if (typeof aCoreMethod === 'object') {
+  } else if (typeof aCoreMethod === 'object' && !isArray(aCoreMethod)) {
     injectorOpts = aCoreMethod as AbilityInjectorOptions;
     aCoreMethod = undefined;
   }
@@ -258,19 +268,43 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
       let vClassPrototype = aClass.prototype;
 
       let vHasCoreMethod = isArray(aCoreMethod) ? aCoreMethod[0] : aCoreMethod as string;
+      if (vHasCoreMethod && aOptions && aOptions.rename && aOptions.rename[vHasCoreMethod]) {
+        vHasCoreMethod = aOptions.rename[vHasCoreMethod];
+      }
+
+      $abilities = vClassPrototype[abilitiesSym];
       // TODO: Check the core method on the target class or the inheritance?
+      let vHasCoreMethodInTarget = false;
       if (vHasCoreMethod) {
-        if (vHasCoreMethod[0] !== '@') {
-          vHasCoreMethod = vClassPrototype.hasOwnProperty(vHasCoreMethod);
-        } else {
-          vHasCoreMethod = vHasCoreMethod.substring(1);
-          vHasCoreMethod = aClass.hasOwnProperty(vHasCoreMethod);
+        const isStatic = vHasCoreMethod[0] === '@';
+        const vCleanName = isStatic ? vHasCoreMethod.substring(1) : vHasCoreMethod;
+        const target = isStatic ? aClass : vClassPrototype;
+        if (vCleanName in target) {
+          if (target.hasOwnProperty(vCleanName)) {
+            // If it's an own property, skip only if it's NOT a function.
+            // If it is a function, we want to allow AOP overloading.
+            if (typeof target[vCleanName] !== 'function') {
+              vHasCoreMethodInTarget = true;
+            }
+          } else {
+            // Inherited core method implies the ability is already injected on a parent.
+            vHasCoreMethodInTarget = true;
+          }
         }
       }
 
-      const needInjection = !(vHasCoreMethod || ($abilities && $abilities['$' + vName]))
+      const needInjection = !(vHasCoreMethodInTarget || (vClassPrototype.hasOwnProperty(abilitiesSym) && $abilities && $abilities['$' + vName]))
 
-      if (needInjection) {
+      if (!needInjection) {
+        if (vName) {
+          const vInjectedOnParent = isInjectedOnParent(aClass, vName);
+          if (vInjectedOnParent) {return vInjectedOnParent}
+        }
+      } else {
+        if (aOptions && aOptions.rename) {
+          _applyRename(aClass, AbilityClass, aOptions, vClassPrototype)
+        }
+
         let vIncludeMembers!: Array<string>
         let vFilterMembers!: (name: string) => boolean
         const vHasIncludeOptions = aOptions && (aOptions.include || aOptions.exclude)
@@ -290,7 +324,10 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
             if (!isArray(arr)) {arr = [arr]}
             vIncludeMembers = vIncludeMembers.filter(item => arr.indexOf(item)=== -1);
           }
-          arrayPushOnly(vIncludeMembers, aCoreMethod)
+          const vCoreMethods: string[] = isArray(aCoreMethod) ? (aCoreMethod as string[]) : (typeof aCoreMethod === 'string' ? [aCoreMethod] : [])
+          // Only force add core methods that are not explicitly renamed
+          const vForceCoreMethods = vCoreMethods.filter(m => !aOptions || !aOptions.rename || !aOptions.rename[m])
+          arrayPushOnly(vIncludeMembers, vForceCoreMethods)
           if (vIncludeMembers.length) {
             vFilterMembers = function filterMembers(name) {
               return vIncludeMembers.includes(name);
@@ -489,8 +526,64 @@ function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
 }
 
 /**
- * Pushes an array of items into a destination array, but only if the items are not already in the destination array
+ * Applies method renaming according to the provided options.
+ * 
+ * This private helper function performs several tasks:
+ * 1.  **Descriptor Lookup**: It searches for the property descriptor of the source method 
+ *     not just in the immediate Ability class, but also throughout its prototype chain 
+ *     using `Object.getPrototypeOf`. This ensures inherited methods can also be renamed.
+ * 2.  **Safety Validation**: It verifies that the destination name (newName) does not 
+ *     already exist on the target class or its prototype chain. If a conflict is found, 
+ *     it throws a descriptive error to prevent accidental overwriting.
+ * 3.  **Method Redirection**: It defines the new method on the target class using the 
+ *     original descriptor (preserving getters, setters, and other attributes).
+ * 4.  **Auto-Exclusion**: It automatically adds the original method name to the 
+ *     `exclude` list. This prevents the injector from adding the method under its 
+ *     original name later, ensuring logical isolation and avoiding duplicate injections.
  *
+ * @private
+ * @param aClass - The target class to which the renamed methods will be added.
+ * @param AbilityClass - The ability class providing the methods.
+ * @param aOptions - The ability options containing the `rename` map and `exclude` list.
+ * @param vClassPrototype - The prototype of the target class (used for instance methods).
+ */
+function _applyRename(aClass, AbilityClass, aOptions, vClassPrototype) {
+  const rename = aOptions.rename
+  const exclude = isArray(aOptions.exclude) ? aOptions.exclude : (aOptions.exclude ? [aOptions.exclude] : [])
+  Object.keys(rename).forEach(oldName => {
+    const newName = rename[oldName]
+    const isStatic = oldName[0] === '@'
+    const vOldName = isStatic ? oldName.substring(1) : oldName
+    const vNewName = newName[0] === '@' ? newName.substring(1) : newName
+    const target = isStatic ? aClass : vClassPrototype
+    let source = isStatic ? AbilityClass : AbilityClass.prototype
+
+    if (target[vNewName] !== undefined) {
+      throw new Error(`Rename failed: destination name "${vNewName}" already exists on target class.`)
+    }
+
+    let desc: PropertyDescriptor | undefined
+    while (source && source !== Object.prototype) {
+      desc = getOwnPropertyDescriptor(source, vOldName)
+      if (desc) {break}
+      source = Object.getPrototypeOf(source)
+    }
+
+    if (!desc) {
+      throw new Error(`Rename failed: source method "${vOldName}" not found in Ability.`)
+    }
+
+    defineProperty(target, vNewName, undefined, desc)
+    if (exclude.indexOf(oldName) === -1) {
+      exclude.push(oldName)
+    }
+  })
+  aOptions.exclude = exclude
+}
+
+/**
+ * Pushes an array of items into a destination array, but only if the items are not already in the destination array
+...
  * @param dest - The destination array
  * @param src - The source array or item
  * @returns The destination array with the new items added
