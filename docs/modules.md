@@ -24,6 +24,7 @@
 ### Functions
 
 - [createAbilityInjector](modules.md#createabilityinjector)
+- [flattenAbility](modules.md#flattenability)
 - [hasAbilityOnParent](modules.md#hasabilityonparent)
 - [injectedOnParent](modules.md#injectedonparent)
 - [requireAbility](modules.md#requireability)
@@ -51,7 +52,7 @@ The additional injection mode
 
 #### Defined in
 
-[custom-ability.ts:34](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L34)
+[custom-ability.ts:34](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L34)
 
 ___
 
@@ -65,7 +66,7 @@ A symbol used to mark a class's additional ability whether injected
 
 #### Defined in
 
-[custom-ability.ts:29](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L29)
+[custom-ability.ts:29](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L29)
 
 ___
 
@@ -79,7 +80,7 @@ A symbol used to mark a class's abilities
 
 #### Defined in
 
-[custom-ability.ts:22](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L22)
+[custom-ability.ts:22](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L22)
 
 ## Functions
 
@@ -113,7 +114,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:215](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L215)
+[custom-ability.ts:215](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L215)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `isGetClassFunc?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -144,7 +145,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:216](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L216)
+[custom-ability.ts:216](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L216)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -174,7 +175,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:217](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L217)
+[custom-ability.ts:217](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L217)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -203,7 +204,77 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:218](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/custom-ability.ts#L218)
+[custom-ability.ts:218](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L218)
+
+___
+
+### flattenAbility
+
+▸ **flattenAbility**<`T`\>(`AbilityClass`): `T`
+
+Flattens the inheritance hierarchy of an Ability class by lifting members from
+the prototype chain to the class itself as 'own properties'.
+
+**`Description`**
+
+By default, `custom-ability` only scans the 'own properties' of the provided
+Ability class. If your Ability (e.g., `AdvanceAbility`) extends another class
+(e.g., `SimpleAbility`), the inherited methods will be missed during injection.
+
+This function traverses the inheritance chain (both instance and static) and
+copies descriptors to the target class, ensuring all inherited capabilities
+are visible to the `custom-ability` injector.
+
+**`Example`**
+
+```typescript
+class Simple {
+  sayHello() { return 'Hello'; }
+}
+class Advance extends Simple {
+  sayHi() { return 'Hi'; }
+}
+
+// Without flattening, only 'sayHi' is injected.
+// With flattening, both 'sayHello' and 'sayHi' are injected.
+const Flattened = flattenAbility(Advance);
+const inject = createAbilityInjector(Flattened);
+inject(MyService);
+```
+
+**`Throws`**
+
+If the input is not a function/class.
+
+**`Note`**
+
+1. This function preserves Property Descriptors (getters/setters).
+2. It follows a "fill-in" strategy: subclass overrides are NEVER overwritten
+   by parent members, preserving `super` call integrity.
+3. Only String keys are processed to ensure compatibility with `custom-ability`
+   filtering and renaming features.
+
+#### Type parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `T` | extends `Function` | A class constructor type. |
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `AbilityClass` | `T` | The class to be flattened. |
+
+#### Returns
+
+`T`
+
+The same AbilityClass with all inherited members lifted to its own prototype/constructor.
+
+#### Defined in
+
+[flatten-ability.ts:43](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/flatten-ability.ts#L43)
 
 ___
 
@@ -224,7 +295,7 @@ ___
 
 #### Defined in
 
-[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/has-ability-on-parent.ts#L3)
+[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/has-ability-on-parent.ts#L3)
 
 ___
 
@@ -245,7 +316,7 @@ ___
 
 #### Defined in
 
-[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/injected-on-parent.ts#L3)
+[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/injected-on-parent.ts#L3)
 
 ___
 
@@ -267,4 +338,4 @@ ___
 
 #### Defined in
 
-[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/918aff6/src/require.ts#L9)
+[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/require.ts#L9)

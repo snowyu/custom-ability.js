@@ -332,8 +332,22 @@ This library provides a function customAbility that can inject the abilities of 
 Abilities can be defined as static or instance methods on the "mixin" class.
 
 ```js
-import {createAbilityInjector} from 'custom-ability'
+import {createAbilityInjector, flattenAbility} from 'custom-ability'
+```
 
+### `flattenAbility<T>(AbilityClass: T): T`
+
+By default, `custom-ability` only scans the "Own Properties" of the provided Ability class. If your Ability class (e.g., `AdvanceAbility`) inherits from another class (e.g., `SimpleAbility`), the parent's members will not be automatically recognized. This utility function flattens the inheritance chain, ensuring all inherited members are visible to the injector.
+
+```typescript
+class Simple { sayHello() { return 'Hello'; } }
+class Advance extends Simple { sayHi() { return 'Hi'; } }
+
+// Flatten before creating the injector
+const Flattened = flattenAbility(Advance);
+const inject = createAbilityInjector(Flattened);
+
+inject(MyService); // Both 'sayHello' and 'sayHi' are now injected into MyService.
 ```
 
 ### createAbilityInjector(abilityClass: Function|object, coreMethod?: string|string[], isGetClassFunction = false, injectorOpts?: AbilityInjectorOptions): WithAbilityFn
