@@ -212,6 +212,23 @@ injectIdentity(Child);  // 探测发现 Child 已继承了 whoAmI，跳过注入
 
 ## API 详细参考
 
+### `flattenAbility<T>(AbilityClass: T): T`
+
+* **`AbilityClass`** : 要拉平的类。
+
+由于 `custom-ability` 默认仅扫描 Ability 类自身的属性（Own Properties），如果你的 Ability 类通过 `extends` 继承了其他类，其父类的成员将无法被自动识别。使用此工具函数可以展平继承链，确保所有能力成员均可被注入。
+
+```typescript
+class Simple { sayHello() { return 'Hello'; } }
+class Advance extends Simple { sayHi() { return 'Hi'; } }
+
+// Flatten before creating the injector
+const Flattened = flattenAbility(Advance);
+const inject = createAbilityInjector(Flattened);
+
+inject(MyService); // Both 'sayHello' and 'sayHi' are now injected into MyService.
+```
+
 ### `createAbilityInjector(abilityClass, coreMethod?, isGetClassFunction?, injectorOpts?)`
 
 * **`abilityClass`** *(Function|Object)*: 要注入的类。
