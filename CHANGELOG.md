@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.2.0](https://github.com/snowyu/custom-ability.js/compare/v2.1.0...v2.2.0) (2026-03-20)
+
+
+### Features
+
+* add flattenAbility func ([de1c9ec](https://github.com/snowyu/custom-ability.js/commit/de1c9ec11de5b687476be4f383545ed8283f8a5d))
+
 ## [2.1.0](https://github.com/snowyu/custom-ability.js/compare/v2.0.1...v2.1.0) (2026-03-10)
 
 
