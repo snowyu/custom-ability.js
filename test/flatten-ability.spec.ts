@@ -6,7 +6,7 @@ use(sinonChai);
 import { createAbilityInjector, AbilityInjectorOptions } from "../src/custom-ability";
 import { flattenAbility } from "../src/flatten-ability";
 
-describe('Custom-Ability 继承支持 (TS + Chai + Sinon)', () => {
+describe('custom-ability: Inheritance & Super Keyword Support', () => {
   let sandbox: sinon.SinonSandbox;
 
   beforeEach(() => {
@@ -17,112 +17,151 @@ describe('Custom-Ability 继承支持 (TS + Chai + Sinon)', () => {
     sandbox.restore();
   });
 
-  it('应该支持深层 super 调用并保持正确的 this 上下文', () => {
-    class Simple {
-      public name = 'simple';
-      say() { return `I am ${this.name}`; }
-    }
+  describe('Basic Method Inheritance', () => {
+    it('should inject inherited methods from parent classes', () => {
+      class Simple { parentMethod() { return 'parent'; } }
+      class Advance extends Simple { childMethod() { return 'child'; } }
 
-    class Advance extends Simple {
-      // 覆盖父类方法并调用 super
-      say() { return `${super.say()} and advanced`; }
-    }
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
 
-    const Flattened = flattenAbility(Advance);
-    const inject = createAbilityInjector(Flattened);
+      class Target {}
+      inject(Target);
+      const instance = new Target() as any;
 
-    class MyService {
-      public name = 'ServiceInstance';
-    }
-
-    inject(MyService);
-    const instance = new MyService() as any;
-
-    // 验证：虽然方法定义在 Ability，但 this 必须指向 MyService 实例
-    expect(instance.say()).to.equal('I am ServiceInstance and advanced');
+      expect(instance.parentMethod()).to.equal('parent');
+      expect(instance.childMethod()).to.equal('child');
+    });
   });
 
-  it('应该能通过 Sinon Spy 监控父类方法的执行', () => {
-    const parentActionStub = sandbox.stub().returns('parent_result');
-
-    class Simple {
-      action() { return parentActionStub.apply(this); }
-    }
-
-    class Advance extends Simple {
-      action() { return `child_${super.action()}`; }
-    }
-
-    const Flattened = flattenAbility(Advance);
-    const inject = createAbilityInjector(Flattened);
-
-    class Target {}
-    inject(Target);
-
-    const obj = new Target() as any;
-    const result = obj.action();
-
-    expect(result).to.equal('child_parent_result');
-    expect(parentActionStub).to.have.been.calledOnce;
-    // 验证执行上下文确实是目标实例
-    expect(parentActionStub.firstCall.thisValue).to.equal(obj);
-  });
-
-  it('应该支持静态 getter 的继承与拉平', () => {
-    class Simple {
-      static get config() { return { base: true }; }
-    }
-    class Advance extends Simple {
-      static get config() {
-        return { ...super.config, advanced: true };
+  describe('Super Keyword & HomeObject Binding', () => {
+    it('should correctly execute super calls and maintain "this" context', () => {
+      class Simple {
+        public identity = 'base';
+        greet() { return `Hello from ${this.identity}`; }
       }
-    }
+      class Advance extends Simple {
+        greet() { return `${super.greet()} and advanced`; }
+      }
 
-    const Flattened = flattenAbility(Advance);
-    const inject = createAbilityInjector(Flattened);
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
 
-    class TargetApp {}
-    inject(TargetApp);
+      class Target { public identity = 'target'; }
+      inject(Target);
+      const instance = new Target() as any;
 
-    const App = TargetApp as any;
-    expect(App.config).to.deep.equal({ base: true, advanced: true });
+      // The super call looks up Simple.prototype, but "this" remains the Target instance
+      expect(instance.greet()).to.equal('Hello from target and advanced');
+    });
   });
 
-  it('应该正确搬运属性描述符 (Getter/Setter)', () => {
-    let shadowValue = '';
-    class Simple {
-      get data() { return shadowValue; }
-      set data(v: string) { shadowValue = v.toUpperCase(); }
-    }
-    class Advance extends Simple {}
+  describe('Async Inheritance', () => {
+    it('should handle async methods with super calls correctly', async () => {
+      class Simple {
+        async fetch() { return 'data'; }
+      }
+      class Advance extends Simple {
+        async fetch() {
+          const base = await super.fetch();
+          return `${base}_plus`;
+        }
+      }
 
-    const Flattened = flattenAbility(Advance);
-    const inject = createAbilityInjector(Flattened);
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
 
-    class Target {}
-    inject(Target);
+      class Target {}
+      inject(Target);
+      const instance = new Target() as any;
 
-    const instance = new Target() as any;
-    instance.data = 'test';
-
-    expect(shadowValue).to.equal('TEST');
-    expect(instance.data).to.equal('TEST');
+      const result = await instance.fetch();
+      expect(result).to.equal('data_plus');
+    });
   });
 
-  it('在多级继承 A->B->C 中，最顶层方法应能被访问', () => {
-    class A { methodA() { return 'A'; } }
-    class B extends A { methodB() { return 'B'; } }
-    class C extends B { methodC() { return 'C'; } }
+  describe('Static Member Inheritance', () => {
+    it('should flatten and inject static members including getters', () => {
+      class Simple {
+        static get version() { return 1; }
+      }
+      class Advance extends Simple {
+        static get version() { return super.version + 1; }
+      }
 
-    const Flattened = flattenAbility(C);
-    const inject = createAbilityInjector(Flattened);
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
 
-    class Target {}
-    inject(Target);
+      class TargetApp {}
+      inject(TargetApp);
 
-    const instance = new Target() as any;
-    expect(instance.methodA()).to.equal('A');
-    expect(instance.methodB()).to.equal('B');
-    expect(instance.methodC()).to.equal('C');
+      const App = TargetApp as any;
+      expect(App.version).to.equal(2);
+    });
+  });
+
+  describe('Property Descriptors', () => {
+    it('should preserve getters and setters during the flattening process', () => {
+      let state = '';
+      class Simple {
+        get log() { return state; }
+        set log(v: string) { state = v.toUpperCase(); }
+      }
+      class Advance extends Simple {}
+
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
+
+      class Target {}
+      inject(Target);
+      const instance = new Target() as any;
+
+      instance.log = 'test';
+      expect(state).to.equal('TEST');
+      expect(instance.log).to.equal('TEST');
+    });
+  });
+
+  describe('Complex Hierarchy (Multi-level)', () => {
+    it('should correctly flatten deep inheritance chains (A->B->C)', () => {
+      class A { a() { return 'A'; } }
+      class B extends A { a() { return super.a() + 'B'; } }
+      class C extends B { a() { return super.a() + 'C'; } }
+
+      const Flattened = flattenAbility(C);
+      const inject = createAbilityInjector(Flattened);
+
+      class Target {}
+      inject(Target);
+      const instance = new Target() as any;
+
+      expect(instance.a()).to.equal('ABC');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should not overwrite existing methods in subclasses', () => {
+      class Simple { method() { return 'parent'; } }
+      class Advance extends Simple { method() { return 'child'; } }
+
+      const Flattened = flattenAbility(Advance);
+      expect(Flattened.prototype.method()).to.equal('child');
+    });
+
+    it.skip('should handle Symbol-based members', () => {
+      // do not supports!
+      const sym = Symbol('test');
+      class Simple { [sym]() { return 'symbol'; } }
+      class Advance extends Simple {}
+
+      const Flattened = flattenAbility(Advance);
+      const inject = createAbilityInjector(Flattened);
+
+      class Target {}
+      inject(Target);
+      const instance = new Target() as any;
+
+      expect(instance[sym]()).to.equal('symbol');
+    });
   });
 });
