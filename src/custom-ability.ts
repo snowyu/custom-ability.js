@@ -37,14 +37,14 @@ export const AdditionalInjectionMode = { all: 0, target: 1}
  * @param isStatic  Whether the members to be injected are static
  * @returns The names of members that have been injected
  */
-function injectMembersFromNonEnum(aTargetClass: Function, aObject, filter?: (name:string)=>boolean, isStatic?: boolean) {
+function injectMembersFromNonEnum(aTargetClass: Function, aObject: any, filter?: (name:string)=>boolean, isStatic?: boolean) {
   const nonEnumNames = getNonEnumNames(aObject);
-  const result = [];
+  const result: string[] = [];
   nonEnumNames.forEach(function(name: string) {
     const vSkipNames = isStatic ? skipStaticNames : skipProtoNames
     if (vSkipNames.includes(name)) {return}
 
-    const desc = getOwnPropertyDescriptor(aObject, name)
+    const desc = getOwnPropertyDescriptor(aObject, name)!
     const v = desc.value
     const isFn = isFunction(v)
     const is$ = name[0] === '$';
@@ -57,7 +57,7 @@ function injectMembersFromNonEnum(aTargetClass: Function, aObject, filter?: (nam
     if (desc.get === undefined && desc.set === undefined && v === undefined) {return}
 
     if (!desc.get && isFn) {
-      const vTargetFn = aTargetClass[name]
+      const vTargetFn = (aTargetClass as any)[name]
       if (isFunction(vTargetFn)) {
         if (!isEmptyFunction(vTargetFn)) {
           if (!isEmptyFunction(v)) {
@@ -169,7 +169,7 @@ type SafeInstanceType<T> = T extends new (...args: any[]) => any ? InstanceType<
 
 type ClassEx =
   | Function
-  | ({new (...args: any[])})
+  | (new (...args: any[]) => any)
 ;
 type EnhancedClass<T extends ClassEx, A extends ClassEx> =
   // Static type: merge the static methods of T and A
@@ -245,7 +245,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
   const vDepends = injectorOpts && injectorOpts.depends;
   const afterInjection = injectorOpts && injectorOpts.afterInjection;
 
-  function abilityFn(aClass, aOptions?) {
+  function abilityFn(aClass: ClassEx, aOptions?: AbilityOptions): any {
     let AbilityClass = abilityClass;
     if (isGetClassFunc === true) {
       AbilityClass = (abilityClass as Function)(aClass, aOptions);
@@ -256,14 +256,14 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
     const vName = AbilityClass.name;
 
     if (aClass != null) {
-      let $abilities, vAdditionalAbilityInjected;
+      let $abilities: any, vAdditionalAbilityInjected: any;
       const vTargetClass = aClass;
 
-      let vClassPrototype = aClass.prototype;
+      let vClassPrototype = (aClass as any).prototype;
 
-      let vHasCoreMethod = isArray(aCoreMethod) ? aCoreMethod[0] : aCoreMethod as string;
-      if (vHasCoreMethod && aOptions && aOptions.rename && aOptions.rename[vHasCoreMethod]) {
-        vHasCoreMethod = aOptions.rename[vHasCoreMethod];
+      let vHasCoreMethod: string | undefined = isArray(aCoreMethod) ? (aCoreMethod as string[])[0] : aCoreMethod as string | undefined;
+      if (vHasCoreMethod && aOptions && aOptions.rename && aOptions.rename[vHasCoreMethod as string]) {
+        vHasCoreMethod = aOptions.rename[vHasCoreMethod as string];
       }
 
       $abilities = vClassPrototype[abilitiesSym];
@@ -274,10 +274,10 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
         const vCleanName = isStatic ? vHasCoreMethod.substring(1) : vHasCoreMethod;
         const target = isStatic ? aClass : vClassPrototype;
         if (vCleanName in target) {
-          if (target.hasOwnProperty(vCleanName)) {
+          if ((target as any).hasOwnProperty(vCleanName)) {
             // If it's an own property, skip only if it's NOT a function.
             // If it is a function, we want to allow AOP overloading.
-            if (typeof target[vCleanName] !== 'function') {
+            if (typeof (target as any)[vCleanName] !== 'function') {
               vHasCoreMethodInTarget = true;
             }
           } else {
@@ -304,26 +304,26 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
         const vHasIncludeOptions = aOptions && (aOptions.include || aOptions.exclude)
 
         if (vHasIncludeOptions) {
-          let arr = aOptions.include
-          const hasExclude = typeof aOptions.exclude === 'string' || (aOptions.exclude && aOptions.exclude.length)
+          let arr: string | string[] = aOptions!.include || []
+          const hasExclude = typeof aOptions!.exclude === 'string' || !!(aOptions!.exclude && (aOptions!.exclude as string[]).length)
           if (typeof arr === 'string') {arr = [arr]}
           if (!(arr && arr.length) || hasExclude) {
             vIncludeMembers = getMembers(AbilityClass)
           } else {
-            vIncludeMembers = arr
+            vIncludeMembers = arr as string[]
           }
 
-          arr = aOptions.exclude
-          if (arr) {
-            if (!isArray(arr)) {arr = [arr]}
-            vIncludeMembers = vIncludeMembers.filter(item => arr.indexOf(item)=== -1);
+          arr = aOptions!.exclude || []
+          if (arr.length) {
+            if (!Array.isArray(arr)) {arr = [arr]}
+            vIncludeMembers = vIncludeMembers.filter((item: string) => (arr as string[]).indexOf(item) === -1);
           }
           const vCoreMethods: string[] = isArray(aCoreMethod) ? (aCoreMethod as string[]) : (typeof aCoreMethod === 'string' ? [aCoreMethod] : [])
           // Only force add core methods that are not explicitly renamed
-          const vForceCoreMethods = vCoreMethods.filter(m => !aOptions || !aOptions.rename || !aOptions.rename[m])
+          const vForceCoreMethods = vCoreMethods.filter((m: string) => !aOptions || !aOptions.rename || !aOptions.rename[m])
           arrayPushOnly(vIncludeMembers, vForceCoreMethods)
           if (vIncludeMembers.length) {
-            vFilterMembers = function filterMembers(name) {
+            vFilterMembers = function filterMembers(name: string) {
               return vIncludeMembers.includes(name);
             }
           }
@@ -348,26 +348,26 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
 
         if (!vHasIncludeOptions) {
           // inject the static methods
-          let vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, null, true);
+          let vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, undefined, true);
           // inject the enumerable members
-          extendFilter(aClass, AbilityClass, function(k) {
+          extendFilter(aClass, AbilityClass, function(k: string) {
             return (vExcludes.indexOf(k) === -1);
           });
 
           // inject the methods
           vExcludes = injectMembersFromNonEnum(vClassPrototype, AbilityClass.prototype);
-          extendFilter(vClassPrototype, AbilityClass.prototype, function(k) {
+          extendFilter(vClassPrototype, AbilityClass.prototype, function(k: string) {
             return (vExcludes.indexOf(k) === -1);
           });
         } else {
           let vExcludes = injectMembersFromNonEnum(aClass, AbilityClass, vFilterMembers, true);
           // inject the enumerable members
-          extendFilter(aClass, AbilityClass, function(k) {
+          extendFilter(aClass, AbilityClass, function(k: string) {
             return (vExcludes.indexOf(k) === -1 && vFilterMembers('@' + k));
           });
 
           vExcludes = injectMembersFromNonEnum(vClassPrototype, AbilityClass.prototype, vFilterMembers);
-          extendFilter(vClassPrototype, AbilityClass.prototype, function(k) {
+          extendFilter(vClassPrototype, AbilityClass.prototype, function(k: string) {
             return (vExcludes.indexOf(k) === -1 && vFilterMembers(k));
           });
         }
@@ -379,7 +379,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
           if (vClassPrototype.hasOwnProperty(abilitiesSym)) {
             $abilities = vClassPrototype[abilitiesSym];
           } else {
-            $abilities = {};
+            $abilities = {} as any;
             defineProperty(vClassPrototype, abilitiesSym, $abilities);
           }
           $abilities['$' + vName] = abilityFn;
@@ -387,12 +387,12 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
       }
 
       // Apply optional dependencies
-      if (vDepends) {
-        Object.keys(vDepends).forEach(function (name) {
+      if (vDepends && $abilities) {
+        Object.keys(vDepends).forEach(function (name: string) {
           let vDepend = vDepends[name]
           if (vDepend) {
             if (!Array.isArray(vDepend)) {vDepend = [vDepend]}
-            vDepend.forEach(item => !item.id && (item.id = vName))
+            (vDepend as any[]).forEach((item: any) => !item.id && (item.id = vName))
 
             let vDependAbility = $abilities[name]
             if (vDependAbility) {
@@ -416,13 +416,13 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
     return aClass;
   };
 
-  abilityFn.filter = filter;
+  abilityFn.filter = filter as any;
 
-  function injectAdditionalAbility(aClass, aName, aOptions) {
-    let result;
-    let vClass = aClass;
+  function injectAdditionalAbility(aClass: Function, aName: string, aOptions?: AbilityOptions): any {
+    let result: Function | false | undefined;
+    let vClass: any = aClass;
     let vOnTarget = true;
-    const vTargets = []
+    const vTargets: Array<[Function, AbilityOptions, Function]> = []
     while (vClass && vClass.prototype) {
       if (vClass.prototype.hasOwnProperty(abilitiesSym)) {
         let vAbility = getAdditionalAbilityOptions(vClass, aName);
@@ -433,7 +433,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
               const vOptions = item.getOpts(aOptions);
               if (vOptions != null) {
                 if (item.required && item.required.length && aOptions && (aOptions.include || aOptions.exclude)) {
-                  let vMissingMethod
+                  let vMissingMethod: boolean | undefined
                   for (const n of item.required) {
                     if (!filter(n, aOptions.include, aOptions.exclude)) {
                       vMissingMethod = true
@@ -468,7 +468,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, aCoreM
     return result;
   };
 
-  return abilityFn;
+  return abilityFn as ClassAbilityFn<A>;
 };
 
 /**
@@ -484,7 +484,7 @@ function getAdditionalAbilityOptions(aClass: Function, aName: string) {
   return result;
 }
 
-function _applyAdditionalAbility(aClass, aOptions) {
+function _applyAdditionalAbility(aClass: Function, aOptions: AbilityOptions) {
   if (aOptions.methods instanceof Object) {
     const methods = getFilteredMembers(aOptions.methods, aOptions)
     injectMethods(aClass.prototype, methods, aOptions);
@@ -503,7 +503,7 @@ function _applyAdditionalAbility(aClass, aOptions) {
  * @param {AbilityOptions} aOptions - The options that describe which methods to inject
  * @param {Function} [fromClass] - The class from which the additional ability is being applied
  */
-function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
+function applyAdditionalAbility(aClass: Function, aName: string, aOptions: AbilityOptions, fromClass?: Function) {
   if (aOptions != null) {
     const fromId = fromClass && aClass !== fromClass ? '_' + fromClass.name : ''
     const id = aName + (aOptions.id ? '_' + aOptions.id : fromId)
@@ -541,9 +541,9 @@ function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
  * @param aOptions - The ability options containing the `rename` map and `exclude` list.
  * @param vClassPrototype - The prototype of the target class (used for instance methods).
  */
-function _applyRename(aClass, AbilityClass, aOptions, vClassPrototype) {
-  const rename = aOptions.rename
-  const exclude = isArray(aOptions.exclude) ? aOptions.exclude : (aOptions.exclude ? [aOptions.exclude] : [])
+function _applyRename(aClass: Function, AbilityClass: Function, aOptions: AbilityOptions, vClassPrototype: any) {
+  const rename = aOptions.rename!
+  const exclude: string[] = isArray(aOptions.exclude) ? aOptions.exclude as string[] : (aOptions.exclude ? [aOptions.exclude as string] : [])
   Object.keys(rename).forEach(oldName => {
     const newName = rename[oldName]
     const isStatic = oldName[0] === '@'
@@ -585,7 +585,7 @@ function _applyRename(aClass, AbilityClass, aOptions, vClassPrototype) {
 function arrayPushOnly(dest: Array<any>, src: Array<any>|any) {
   if (src !== undefined) {
     if (!Array.isArray(src)) {src = [src]}
-    src.forEach(item => {
+    src.forEach((item: any) => {
       dest.indexOf(item) === -1 && dest.push(item)
     });
   }
@@ -600,9 +600,9 @@ function arrayPushOnly(dest: Array<any>, src: Array<any>|any) {
  * @returns An array of member names
  */
 function getMembers(aClass: Function) {
-  let result: Array<string> = getNonEnumNames(aClass).filter(n => !skipStaticNames.includes(n)).map(name => '@' + name)
-  result = result.concat(Object.keys(aClass).map(name => '@' + name))
-  result = result.concat(getNonEnumNames(aClass.prototype).filter(n => !skipProtoNames.includes(n)))
+  let result: Array<string> = getNonEnumNames(aClass).filter((n: string) => !skipStaticNames.includes(n)).map((name: string) => '@' + name)
+  result = result.concat(Object.keys(aClass).map((name: string) => '@' + name))
+  result = result.concat(getNonEnumNames(aClass.prototype).filter((n: string) => !skipProtoNames.includes(n)))
   result = result.concat(Object.keys(aClass.prototype))
   return result
 }
@@ -617,21 +617,21 @@ function getMembers(aClass: Function) {
  * @param {boolean} [aIsStatic] - Whether the member is a static member
  * @returns {boolean} - Whether to include the member
  */
-function filter(k, aIncludes, aExcludes, aIsStatic?: boolean) {
+function filter(k: string, aIncludes?: string | string[], aExcludes?: string | string[], aIsStatic?: boolean) {
   if (aIsStatic) {
     k = '@' + k;
   }
   if (typeof aIncludes === 'string') {aIncludes = [aIncludes]}
   if (typeof aExcludes === 'string') {aExcludes = [aExcludes]}
 
-  let result = aIncludes && aIncludes.length;
+  let result: any = aIncludes && aIncludes.length;
   if (result) {
-    result = aIncludes.indexOf(k) >= 0;
+    result = aIncludes!.indexOf(k) >= 0;
     if (!result && aExcludes && aExcludes.length) {
-      result = !(aExcludes.indexOf(k) >= 0);
+      result = !(aExcludes!.indexOf(k) >= 0);
     }
   } else if (aExcludes && aExcludes.length) {
-    result = !(aExcludes.indexOf(k) >= 0);
+    result = !(aExcludes!.indexOf(k) >= 0);
   } else {
     result = true;
   }
@@ -648,31 +648,12 @@ function filter(k, aIncludes, aExcludes, aIsStatic?: boolean) {
  * @param {boolean} [isStatic] - Whether the members are static members
  * @returns {Object} - An object containing only the members that pass the filter
  */
-function getFilteredMembers(obj, aOptions, isStatic?: boolean) {
-  const result = {}
-  Object.keys(obj).forEach(name => {
+function getFilteredMembers(obj: Record<string, any>, aOptions: AbilityOptions, isStatic?: boolean) {
+  const result: Record<string, any> = {}
+  Object.keys(obj).forEach((name: string) => {
     if (filter(name, aOptions.include, aOptions.exclude, isStatic)) {
       result[name] = obj[name]
     }
   })
   return result
 }
-
-/*
-function cloneObj(src: object, maxDeep = 5) {
-  if (!src) {return src};
-  const result = {}
-  Object.keys(src).forEach(key => {
-    const value = src[key]
-    if (Array.isArray(value)) {
-      result[key] = value.slice()
-    } else if (maxDeep > 0 && value instanceof Object) {
-      --maxDeep
-      result[key] = cloneObj(value, maxDeep)
-    } else {
-      result[key] = src[key]
-    }
-  })
-  return result
-}
-*/

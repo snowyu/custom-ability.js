@@ -6,8 +6,8 @@ async function getDefaultEntry(name: string) {
   return result;
 }
 
-export async function requireAbility(packageName, aClass, aOptions) {
-  let addAbility: Function;
+export async function requireAbility(packageName: string, aClass: Function, aOptions?: any) {
+  let addAbility: Function | undefined;
   try {
     addAbility = await getDefaultEntry(packageName + '/ability.js');
   } catch (error) {}
