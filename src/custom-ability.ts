@@ -1,10 +1,4 @@
-import isArray from 'util-ex/lib/is/type/array';
-import isFunction from 'util-ex/lib/is/type/function';
-import extendFilter from 'util-ex/lib/extend';
-import injectMethods from 'util-ex/lib/injectMethods';
-import injectMethod from 'util-ex/lib/injectMethod';
-import defineProperty from 'util-ex/lib/defineProperty';
-import {getNonEnumerableNames as getNonEnumNames} from 'util-ex/lib/get-non-enumerable-names';
+import {defineProperty, extend as extendFilter, getNonEnumerableNames as getNonEnumNames, injectMethod, injectMethods, isArray, isFunction} from 'util-ex';
 import { getParentClass, isEmptyFunction } from 'inherits-ex';
 
 import isInjectedOnParent from './injected-on-parent';
@@ -224,7 +218,7 @@ export function createAbilityInjector<A extends ClassEx>(abilityClass: A, inject
  *                    This is a minimum set of methods required for the ability to be considered injected.
  *                    Core methods are defined in the ability class, and can be static or instance methods.
  *                    If a core method is a static method, it must be prefixed with the "@" symbol.
- *                    Note: If a core method is renamed via `options.rename`, the detection logic will 
+ *                    Note: If a core method is renamed via `options.rename`, the detection logic will
  *                    automatically use the new name to check for existence.
  * @param isGetClassFunc An optional parameter that indicates whether abilityClass should be invoked
  *                    with aClass and aOptions to get the actual ability class. defaults to false.
@@ -527,18 +521,18 @@ function applyAdditionalAbility(aClass, aName, aOptions, fromClass?) {
 
 /**
  * Applies method renaming according to the provided options.
- * 
+ *
  * This private helper function performs several tasks:
- * 1.  **Descriptor Lookup**: It searches for the property descriptor of the source method 
- *     not just in the immediate Ability class, but also throughout its prototype chain 
+ * 1.  **Descriptor Lookup**: It searches for the property descriptor of the source method
+ *     not just in the immediate Ability class, but also throughout its prototype chain
  *     using `Object.getPrototypeOf`. This ensures inherited methods can also be renamed.
- * 2.  **Safety Validation**: It verifies that the destination name (newName) does not 
- *     already exist on the target class or its prototype chain. If a conflict is found, 
+ * 2.  **Safety Validation**: It verifies that the destination name (newName) does not
+ *     already exist on the target class or its prototype chain. If a conflict is found,
  *     it throws a descriptive error to prevent accidental overwriting.
- * 3.  **Method Redirection**: It defines the new method on the target class using the 
+ * 3.  **Method Redirection**: It defines the new method on the target class using the
  *     original descriptor (preserving getters, setters, and other attributes).
- * 4.  **Auto-Exclusion**: It automatically adds the original method name to the 
- *     `exclude` list. This prevents the injector from adding the method under its 
+ * 4.  **Auto-Exclusion**: It automatically adds the original method name to the
+ *     `exclude` list. This prevents the injector from adding the method under its
  *     original name later, ensuring logical isolation and avoiding duplicate injections.
  *
  * @private

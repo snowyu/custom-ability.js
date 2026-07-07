@@ -1,4 +1,0 @@
-extension: ["ts", "js"]
-spec: "test/**/*.spec.ts"
-# require: "test/babel-register.js"
-require: "ts-node/register"
