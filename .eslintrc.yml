@@ -20,6 +20,7 @@ rules:
   prefer-arrow-callback: off
   prefer-template: off
   unicorn/prefer-includes: off
+  jsonc/sort-keys: off
   # curly: [error, multi, consistent]
   # curly: [error, multi-line]
   # max-statements-per-line: off
