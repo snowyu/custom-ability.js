@@ -17,11 +17,11 @@ An additional ability
 
 ### getOpts
 
-• **getOpts**: (`options?`: [`AbilityOptions`](AbilityOptions.md)) => [`AbilityOptions`](AbilityOptions.md)
+• **getOpts**: (`options?`: [`AbilityOptions`](AbilityOptions.md)) => `undefined` \| [`AbilityOptions`](AbilityOptions.md)
 
 #### Type declaration
 
-▸ (`options?`): [`AbilityOptions`](AbilityOptions.md)
+▸ (`options?`): `undefined` \| [`AbilityOptions`](AbilityOptions.md)
 
 Returns the additional ability options if they exist
 
@@ -33,13 +33,13 @@ Returns the additional ability options if they exist
 
 ##### Returns
 
-[`AbilityOptions`](AbilityOptions.md)
+`undefined` \| [`AbilityOptions`](AbilityOptions.md)
 
 the Additional Ability options if exists
 
 #### Defined in
 
-[custom-ability.ts:150](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L150)
+[custom-ability.ts:144](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L144)
 
 ___
 
@@ -51,7 +51,7 @@ the AdditionalAbilityOptions ID
 
 #### Defined in
 
-[custom-ability.ts:135](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L135)
+[custom-ability.ts:129](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L129)
 
 ___
 
@@ -63,7 +63,7 @@ the Additional Injection Mode
 
 #### Defined in
 
-[custom-ability.ts:139](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L139)
+[custom-ability.ts:133](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L133)
 
 ___
 
@@ -75,4 +75,4 @@ the list of required methods
 
 #### Defined in
 
-[custom-ability.ts:143](https://github.com/snowyu/custom-ability.js/blob/e70d827/src/custom-ability.ts#L143)
+[custom-ability.ts:137](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L137)
