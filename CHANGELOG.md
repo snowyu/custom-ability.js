@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.3.0](https://github.com/snowyu/custom-ability.js/compare/v2.2.0...v2.3.0) (2026-07-07)
+
+
+### Features
+
+* enable strict mode and fix all type errors ([3698645](https://github.com/snowyu/custom-ability.js/commit/3698645b4d84eed6ce6c1ce9392f8e847ca45b4c))
+* migrate build from tsc+babel to tsup, test from mocha to vitest ([a5b38d8](https://github.com/snowyu/custom-ability.js/commit/a5b38d80a0ff011310fc64dcd5ee1c966c2b206f))
+
 ## [2.2.0](https://github.com/snowyu/custom-ability.js/compare/v2.1.0...v2.2.0) (2026-03-20)
 
 
