@@ -52,7 +52,7 @@ The additional injection mode
 
 #### Defined in
 
-[custom-ability.ts:28](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L28)
+[custom-ability.ts:28](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L28)
 
 ___
 
@@ -66,7 +66,7 @@ A symbol used to mark a class's additional ability whether injected
 
 #### Defined in
 
-[custom-ability.ts:23](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L23)
+[custom-ability.ts:23](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L23)
 
 ___
 
@@ -80,7 +80,7 @@ A symbol used to mark a class's abilities
 
 #### Defined in
 
-[custom-ability.ts:16](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L16)
+[custom-ability.ts:16](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L16)
 
 ## Functions
 
@@ -114,7 +114,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:209](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L209)
+[custom-ability.ts:209](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L209)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `isGetClassFunc?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -145,7 +145,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:210](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L210)
+[custom-ability.ts:210](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L210)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `aCoreMethod?`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -175,7 +175,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:211](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L211)
+[custom-ability.ts:211](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L211)
 
 ▸ **createAbilityInjector**<`A`\>(`abilityClass`, `injectorOpts?`): `ClassAbilityFn`<`A`\>
 
@@ -204,7 +204,7 @@ Another function that accepts the target class and options to include or exclude
 
 #### Defined in
 
-[custom-ability.ts:212](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L212)
+[custom-ability.ts:212](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L212)
 
 ___
 
@@ -274,7 +274,7 @@ The same AbilityClass with all inherited members lifted to its own prototype/con
 
 #### Defined in
 
-[flatten-ability.ts:43](https://github.com/snowyu/custom-ability.js/blob/3698645/src/flatten-ability.ts#L43)
+[flatten-ability.ts:43](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/flatten-ability.ts#L43)
 
 ___
 
@@ -295,7 +295,7 @@ ___
 
 #### Defined in
 
-[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/3698645/src/has-ability-on-parent.ts#L3)
+[has-ability-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/has-ability-on-parent.ts#L3)
 
 ___
 
@@ -316,7 +316,7 @@ ___
 
 #### Defined in
 
-[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/3698645/src/injected-on-parent.ts#L3)
+[injected-on-parent.ts:3](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/injected-on-parent.ts#L3)
 
 ___
 
@@ -338,4 +338,4 @@ ___
 
 #### Defined in
 
-[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/3698645/src/require.ts#L9)
+[require.ts:9](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/require.ts#L9)

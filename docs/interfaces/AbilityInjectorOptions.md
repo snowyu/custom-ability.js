@@ -34,7 +34,7 @@ The ability injector options
 
 #### Defined in
 
-[custom-ability.ts:165](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L165)
+[custom-ability.ts:165](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L165)
 
 ___
 
@@ -46,4 +46,4 @@ The optional depends abilities which can work together
 
 #### Defined in
 
-[custom-ability.ts:164](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L164)
+[custom-ability.ts:164](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L164)

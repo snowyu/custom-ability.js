@@ -30,7 +30,7 @@ An optional object mapping method names to static functions to be added to the t
 
 #### Defined in
 
-[custom-ability.ts:110](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L110)
+[custom-ability.ts:110](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L110)
 
 ___
 
@@ -42,7 +42,7 @@ An optional list of method names to exclude.
 
 #### Defined in
 
-[custom-ability.ts:102](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L102)
+[custom-ability.ts:102](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L102)
 
 ___
 
@@ -54,7 +54,7 @@ An optional id for AdditionalAbility option
 
 #### Defined in
 
-[custom-ability.ts:90](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L90)
+[custom-ability.ts:90](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L90)
 
 ___
 
@@ -66,7 +66,7 @@ An optional list of method names to include.
 
 #### Defined in
 
-[custom-ability.ts:98](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L98)
+[custom-ability.ts:98](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L98)
 
 ___
 
@@ -78,7 +78,7 @@ An optional object mapping method names to functions to be added to the target c
 
 #### Defined in
 
-[custom-ability.ts:106](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L106)
+[custom-ability.ts:106](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L106)
 
 ___
 
@@ -90,7 +90,7 @@ The additional injection mode
 
 #### Defined in
 
-[custom-ability.ts:94](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L94)
+[custom-ability.ts:94](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L94)
 
 ___
 
@@ -105,4 +105,4 @@ Note: "@" prefix means class/static method.
 
 #### Defined in
 
-[custom-ability.ts:117](https://github.com/snowyu/custom-ability.js/blob/3698645/src/custom-ability.ts#L117)
+[custom-ability.ts:117](https://github.com/snowyu/custom-ability.js/blob/8aa6950/src/custom-ability.ts#L117)
