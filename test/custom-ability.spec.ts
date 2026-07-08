@@ -5,8 +5,8 @@ const should = chai.should();
 import { assert, expect } from 'chai';
 chai.use(sinonChai);
 import path from 'path';
-import inherits from 'inherits-ex/lib/inherits';
-import defineProperty from 'util-ex/lib/defineProperty';
+import {inherits} from 'inherits-ex';
+import {defineProperty} from 'util-ex';
 import {AdditionalInjectionMode, abilitiesSym, abilitiesOptSym, createAbilityInjector} from '../src/custom-ability';
 
 
